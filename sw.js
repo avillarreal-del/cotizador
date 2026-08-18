@@ -3,12 +3,13 @@
    worker, SheetJS) más las fuentes, para que funcione sin señal después de
    abrirla una vez con conexión. Estrategia: caché primero para lo propio y lo
    de CDN —son versiones fijas, no cambian— y red primero para todo lo demás. */
-const CACHE = 'sk-cotizador-v1';
+const CACHE = 'sk-cotizador-v2';   // v2: iconos con la marca SK
 
 const PROPIOS = [
   './',
-  './sk_cotizador_41.html',
+  './index.html',
   './manifest.webmanifest',
+  './icon-180.png',
   './icon-192.png',
   './icon-512.png'
 ];
@@ -60,7 +61,7 @@ self.addEventListener('fetch', e => {
       }
       return res;
     } catch (err) {
-      const fb = await caches.match('./sk_cotizador_41.html');
+      const fb = await caches.match('./index.html');
       return fb || Response.error();
     }
   })());
