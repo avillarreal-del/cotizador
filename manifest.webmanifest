@@ -1,0 +1,15 @@
+{
+  "name": "SK Cotizador",
+  "short_name": "Cotizador",
+  "description": "Cotización de arrendamiento puro, contratos y descuento — SK Leasing",
+  "start_url": "./sk_cotizador_41.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0E2841",
+  "theme_color": "#0E2841",
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
