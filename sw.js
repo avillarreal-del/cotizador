@@ -3,7 +3,7 @@
    worker, SheetJS) más las fuentes, para que funcione sin señal después de
    abrirla una vez con conexión. Estrategia: caché primero para lo propio y lo
    de CDN —son versiones fijas, no cambian— y red primero para todo lo demás. */
-const CACHE = 'sk-cotizador-v2';   // v2: iconos con la marca SK
+const CACHE = 'sk-cotizador-v4';   // v4: historial legible en móvil
 
 const PROPIOS = [
   './',

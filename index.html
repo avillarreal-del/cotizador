@@ -2,7 +2,11 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<!-- maximum-scale=1 no impide la pinza en iOS (Safari lo ignora a propósito
+     por accesibilidad), pero sí desactiva el zoom automático al enfocar un
+     campo. Eso es lo que permite usar tipografía menor a 16px sin que la
+     pantalla se descuadre al escribir. La pinza se bloquea abajo por JS. -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>SK Leasing — Cotizador</title>
 <!-- Instalable en el celular: manifiesto, iconos y service worker.
      El service worker sólo se registra sobre https (o localhost), que es
@@ -19,6 +23,21 @@
 <link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png">
 <link rel="apple-touch-icon" href="./icon-180.png">
 <script>
+/* Bloqueo de zoom. En iOS la etiqueta viewport no basta: hay que cancelar
+   los eventos de gesto de Safari (pinza) y el doble toque. */
+document.addEventListener("gesturestart",  function(e){ e.preventDefault(); }, {passive:false});
+document.addEventListener("gesturechange", function(e){ e.preventDefault(); }, {passive:false});
+document.addEventListener("gestureend",    function(e){ e.preventDefault(); }, {passive:false});
+/* Doble toque: se descarta el segundo si llega antes de 300 ms. No se toca
+   el primero, para no romper los clics normales. */
+(function(){
+  var ultimo = 0;
+  document.addEventListener("touchend", function(e){
+    var ahora = Date.now();
+    if (ahora - ultimo <= 300) e.preventDefault();
+    ultimo = ahora;
+  }, {passive:false});
+})();
 if ("serviceWorker" in navigator && location.protocol === "https:") {
   window.addEventListener("load", function(){
     navigator.serviceWorker.register("./sw.js").catch(function(e){
@@ -208,12 +227,14 @@ tbody td{color:var(--tx);font-family:var(--mono);font-size:12px;padding:7px 13px
 
   /* ── respeta el notch y la barra inferior ── */
   body{ -webkit-text-size-adjust:100%; }
+  /* Elimina el retardo de 300 ms del navegador y el zoom por doble toque */
+  html, body{ touch-action:manipulation; }
   header{
-    height:auto; min-height:52px; padding:6px 10px;
+    height:auto; min-height:46px; padding:5px 9px;
     padding-top:calc(6px + env(safe-area-inset-top));
     flex-wrap:wrap; gap:4px 6px; row-gap:6px;
   }
-  header .logo, header img{ max-height:26px; }
+  header .logo, header img{ max-height:23px; }
   /* Navegación en dos renglones de tres, en vez de desplazamiento horizontal:
      los seis botones necesitan ~420px y no caben en 390px. Un carrusel
      escondería la mitad de las secciones —y nadie descubre que se desliza—,
@@ -227,46 +248,88 @@ tbody td{color:var(--tx);font-family:var(--mono);font-size:12px;padding:7px 13px
   #hdr-user{ grid-column:1/-1; grid-row:1; margin-left:0 !important;
     text-align:right; padding-right:2px; }
   .hdr-marca .alias{ display:none; }   /* el logo ya identifica la app */
-  .nav-btn{ font-size:13px; padding:9px 8px; min-height:42px; white-space:nowrap; }
-  #hdr-user{ font-size:11px; max-width:44vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .nav-btn{ font-size:12px; padding:8px 6px; min-height:37px; white-space:nowrap; }
+  #hdr-user{ font-size:10px; max-width:44vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
-  .main{ padding:14px 10px calc(40px + env(safe-area-inset-bottom)); }
+  .main{ padding:11px 9px calc(34px + env(safe-area-inset-bottom)); }
   .card{ border-radius:11px; margin-bottom:12px; }
-  .cb{ padding:13px; }
-  .stitle{ font-size:15px; margin-bottom:12px; }
+  .cb{ padding:11px; }
+  .stitle{ font-size:13.5px; margin-bottom:10px; }
+  .ch{ font-size:11px; padding:9px 11px; }
 
   /* ── formularios: todo en una columna ── */
-  .fg, .fg.c2, .fg.c3, .fg.c4{ grid-template-columns:1fr !important; gap:11px; }
-  .fi label{ font-size:11.5px; }
+  .fg, .fg.c2, .fg.c3, .fg.c4{ grid-template-columns:1fr !important; gap:9px; }
+  .fi label{ font-size:10.5px; margin-bottom:4px; }
   /* 16px evita el zoom automático de iOS al enfocar */
   /* !important porque algunos campos traen ancho fijo en línea (el plazo va
      con style="width:80px"), y un estilo en línea vence a la hoja: en el
      celular quedaría un campo angosto entre campos de ancho completo. */
+  /* 14px: por debajo de 16 iOS haría zoom al enfocar, pero maximum-scale=1
+     ya lo desactivó, así que se puede bajar sin que la pantalla se descuadre. */
   .fi input, .fi select, .fi textarea{
-    font-size:16px; height:46px; padding:0 12px; border-radius:9px;
+    font-size:14px; height:40px; padding:0 10px; border-radius:8px;
     width:100% !important; max-width:100% !important; box-sizing:border-box;
   }
   .fi textarea{ height:auto; padding:10px 12px; }
-  .fi input[type=file]{ height:auto; padding:10px 12px; font-size:14px; }
-  .fi input[type=checkbox]{ height:22px; width:22px; }
+  .fi input[type=file]{ height:auto; padding:8px 10px; font-size:12.5px; }
+  .fi input[type=checkbox]{ height:20px !important; width:20px !important; }
 
   /* ── botones: alcanzables con el pulgar ── */
-  .btn{ font-size:14px; padding:12px 16px; min-height:46px; justify-content:center; }
-  .btn.bsm{ font-size:12.5px; padding:9px 12px; min-height:38px; }
+  .btn{ font-size:13px; padding:10px 14px; min-height:41px; justify-content:center; }
+  .btn.bsm{ font-size:11.5px; padding:8px 10px; min-height:34px; }
   /* Las barras de acciones apilan botones a ancho completo */
   .brow{ gap:8px; }
   .brow > .btn{ flex:1 1 100%; }
   .brow > .btn.bsm{ flex:0 1 auto; }
-  .ract, .ib{ min-width:38px; min-height:38px; font-size:15px; padding:6px 8px; }
+  .ract, .ib{ min-width:34px; min-height:34px; font-size:14px; padding:5px 7px; }
 
   /* ── KPIs y tarjetas de resultado en una o dos columnas ── */
-  .ks, .ks.c2, .ks.c3{ grid-template-columns:1fr 1fr !important; }
+  .ks, .ks.c2, .ks.c3{ grid-template-columns:1fr 1fr !important; gap:8px; }
+  .k{ padding:9px 10px; } .kl{ font-size:9.5px; } .kv{ font-size:14px; }
+
+  /* ── historial: cada operación como ficha, no como renglón de tabla ──
+     El renglón tiene 8 celdas pensadas para 8 columnas. En móvil la regla de
+     860px las metía en una rejilla de "40px 1fr", así que el valor, la renta y
+     la TIR caían en la columna de 40px y los importes se encimaban.
+     Aquí se pasa a flujo libre: nombre arriba, los tres importes repartidos y
+     los botones abajo. Y como el encabezado de columnas está oculto, cada
+     importe lleva su etiqueta puesta desde el CSS (::before), o serían tres
+     cifras sin decir cuál es cuál. */
+  .rr{
+    display:flex !important; flex-wrap:wrap; align-items:center;
+    gap:7px 8px; padding:10px 11px;
+  }
+  /* Bases explícitas: con flex:0 0 auto el ancho depende de cómo el navegador
+     mida el contenido, y el consecutivo (una caja de 28px) puede solaparse con
+     el nombre. Dándole ancho fijo no hay ambigüedad. */
+  .rr > div:nth-child(1){ flex:0 0 30px; }                    /* consecutivo */
+  .rr > div:nth-child(2){ flex:1 1 55%; min-width:0; overflow:hidden; }  /* cliente */
+  .rr > div:nth-child(3){ flex:0 0 auto; }                    /* plazo */
+  .rr > div:nth-child(4){ flex:0 0 auto; }                    /* moneda */
+  /* los tres importes: un tercio cada uno, con piso para que no se corten */
+  .rr > div:nth-child(5), .rr > div:nth-child(6), .rr > div:nth-child(7){
+    flex:1 1 28%; min-width:92px; text-align:left;
+  }
+  .rr > div:nth-child(5)::before{ content:'VALOR'; }
+  .rr > div:nth-child(6)::before{ content:'RENTA'; }
+  .rr > div:nth-child(7)::before{ content:'TIR'; }
+  .rr > div:nth-child(5)::before,
+  .rr > div:nth-child(6)::before,
+  .rr > div:nth-child(7)::before{
+    display:block; font-family:var(--sans); font-size:8.5px; font-weight:700;
+    letter-spacing:.6px; color:var(--txs); margin-bottom:1px;
+  }
+  .rv{ font-size:11.5px; }
+  .rna{ font-size:12.5px; } .rns{ font-size:10px; }
+  /* los botones ocupan su propio renglón completo */
+  .rr > div:nth-child(8){ flex:0 0 100%; width:100%; display:flex; flex-wrap:wrap; gap:5px; margin-top:3px; }
+  .rr > div:nth-child(8) .ract{ flex:0 0 auto; width:auto; }
 
   /* ── tablas: se desplazan en horizontal sin romper la maqueta ── */
   .card .cb > table, .tabla-scroll{ display:block; overflow-x:auto; -webkit-overflow-scrolling:touch; }
-  table{ font-size:12.5px; }
-  thead th{ font-size:10px; padding:8px 9px; }
-  tbody td{ padding:9px; }
+  table{ font-size:11.5px; }
+  thead th{ font-size:9.5px; padding:7px 8px; }
+  tbody td{ padding:8px; }
 
   /* ── modales a pantalla completa ──
      El archivo usa DOS convenciones: .mw (panel de usuarios) y .modal[.wide]
@@ -276,22 +339,23 @@ tbody td{color:var(--tx);font-family:var(--mono);font-size:12px;padding:7px 13px
     max-width:none !important; width:100% !important; min-height:100%;
     border-radius:0; display:flex; flex-direction:column; margin:0;
   }
-  .mh{ border-radius:0; padding:12px 14px; padding-top:calc(12px + env(safe-area-inset-top)); position:sticky; top:0; z-index:2; }
-  .mt, .mtt{ font-size:15px; } .ms, .msub{ font-size:11px; }
-  .mcl{ min-width:42px; min-height:42px; font-size:20px; }
-  .mb{ padding:13px; padding-bottom:calc(24px + env(safe-area-inset-bottom)); flex:1; overflow-y:auto; }
+  .mh{ border-radius:0; padding:10px 12px; padding-top:calc(10px + env(safe-area-inset-top)); position:sticky; top:0; z-index:2; }
+  .mt, .mtt{ font-size:13.5px; } .ms, .msub{ font-size:10px; }
+  .mcl{ min-width:38px; min-height:38px; font-size:19px; }
+  .mb{ padding:11px; padding-bottom:calc(20px + env(safe-area-inset-bottom)); flex:1; overflow-y:auto; }
   /* Los cuerpos que no usan .mb también deben poder desplazarse */
   .modal > div:last-child, .modal.wide > div:last-child{ flex:1; overflow-y:auto; }
-  .cw-sec{ padding:12px; border-radius:10px; }
-  .cw-st{ font-size:11.5px; }
+  .cw-sec{ padding:10px; border-radius:9px; margin-bottom:10px; }
+  .cw-st{ font-size:10.5px; }
+  .cw-note{ font-size:10.5px; line-height:1.45; padding:8px 9px; }
 
   /* ── portada ── */
   .splash-inner{ padding:0 18px; width:100%; }
   .splash-tag{ font-size:11px; letter-spacing:3px; }
   .splash-sub{ font-size:11.5px; margin-bottom:26px; }
   .hero-acciones{ width:100%; gap:10px; }
-  .hero-acciones .btn-hero{ font-size:15px; padding:16px 14px; min-height:54px; }
-  .splash-link{ margin-top:18px; font-size:13px; padding:10px; min-height:44px; }
+  .hero-acciones .btn-hero{ font-size:14px; padding:14px 12px; min-height:48px; }
+  .splash-link{ margin-top:16px; font-size:12px; padding:9px; min-height:40px; }
 }
 
 /* Pantallas muy angostas: los KPIs también se apilan */
