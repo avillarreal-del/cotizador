@@ -217,6 +217,30 @@ tbody td{color:var(--tx);font-family:var(--mono);font-size:12px;padding:7px 13px
   .rr{grid-template-columns:40px 1fr;grid-auto-rows:auto;}
 }
 
+/* ═══ COTIZADOR PARA CLIENTES ═══ */
+/* z-index 5200: por ENCIMA de la portada (5000). Con 4800 la vista se abría
+   detrás y parecía que el botón no hacía nada. Por debajo de los modales
+   (6000), que deben poder montarse encima. */
+#v-publico{ position:fixed; inset:0; z-index:5200; background:var(--g1); overflow-y:auto;
+  -webkit-overflow-scrolling:touch; }
+.pub-top{ display:flex; align-items:center; justify-content:space-between; gap:10px;
+  background:var(--navy); padding:12px 16px; padding-top:calc(12px + env(safe-area-inset-top)); }
+.pub-logo{ height:26px; background:#fff; border-radius:6px; padding:4px 8px; }
+.pub-wrap{ max-width:520px; margin:0 auto; padding:18px 14px calc(40px + env(safe-area-inset-bottom)); }
+.pub-card{ background:#fff; border:1px solid var(--bdr); border-radius:14px; padding:20px; }
+.pub-h{ font-family:var(--sans); font-size:19px; font-weight:700; color:var(--navy); }
+.pub-sub{ font-size:12.5px; color:var(--txs); margin:4px 0 18px; line-height:1.5; }
+#pub-form{ grid-template-columns:1fr; gap:12px; }
+.pub-err{ display:none; background:#fdecec; border:1px solid #e9a8a8; color:#9d2b2b;
+  font-size:12px; font-weight:600; padding:9px 11px; border-radius:8px; margin-top:14px; line-height:1.45; }
+.pub-res{ margin-top:18px; background:var(--blu); border:1px solid var(--blum);
+  border-radius:12px; padding:16px; text-align:center; }
+.pub-res-t{ font-size:11px; font-weight:700; letter-spacing:.7px; text-transform:uppercase; color:var(--blue); }
+.pub-renta{ font-family:var(--mono); font-size:28px; font-weight:700; color:var(--navy); margin:6px 0 4px; }
+.pub-det{ font-size:12px; color:var(--txs); line-height:1.6; }
+.pub-btns{ margin-top:18px; }
+.pub-nota{ margin-top:14px; font-size:10.5px; color:var(--txs); line-height:1.5; text-align:center; }
+
 /* ═══════════════ CELULAR (≤640px) ═══════════════
    Objetivo: una sola columna, campos cómodos al dedo y modales a pantalla
    completa. La regla que más se nota es el tamaño de letra de los campos:
@@ -348,6 +372,14 @@ tbody td{color:var(--tx);font-family:var(--mono);font-size:12px;padding:7px 13px
   .cw-sec{ padding:10px; border-radius:9px; margin-bottom:10px; }
   .cw-st{ font-size:10.5px; }
   .cw-note{ font-size:10.5px; line-height:1.45; padding:8px 9px; }
+
+  /* ── cotizador para clientes ── */
+  .pub-wrap{ padding:14px 11px calc(34px + env(safe-area-inset-bottom)); }
+  .pub-card{ padding:15px; border-radius:12px; }
+  .pub-h{ font-size:17px; } .pub-sub{ font-size:11.5px; margin-bottom:14px; }
+  .pub-renta{ font-size:24px; }
+  .pub-top{ padding:9px 12px; padding-top:calc(9px + env(safe-area-inset-top)); }
+  .pub-logo{ height:22px; }
 
   /* ── portada ── */
   .splash-inner{ padding:0 18px; width:100%; }
@@ -579,7 +611,13 @@ function skLogout(){
 function skAplicarSesion(){
   var dentro = !!AUTH;
   var box = document.getElementById('lg-box'), act = document.getElementById('splash-acciones');
-  if(box) box.style.display = dentro ? 'none' : '';
+  /* Sin sesión la portada muestra la ELECCIÓN (cliente o login), no el
+     formulario de acceso: la primera pantalla es la del cliente. */
+  var elegir = document.getElementById('pub-elegir');
+  if(elegir) elegir.style.display = dentro ? 'none' : '';
+  /* El formulario de acceso permanece oculto hasta que se pulsa "Login": sin
+     sesión se ve la elección, no el login. */
+  if(box) box.style.display = 'none';
   if(act) act.style.display = dentro ? '' : 'none';
   var quien = document.getElementById('hdr-user');
   if(quien) quien.textContent = dentro ? AUTH.nombre : '';
@@ -728,7 +766,16 @@ var SK_COT_TPL = "UEsDBBQABgAIAAAAIQBVT94LrAEAAJoGAAATAAgCW0NvbnRlbnRfVHlwZXNdLn
     </div>
     <div class="splash-tag">Cotizador de Arrendamiento</div>
     <div class="splash-sub">Promotora SKU, S.A.P.I. de C.V. &nbsp;·&nbsp; Alianza Banco Santander México</div>
-    <div id="lg-box" style="margin:22px auto 0;max-width:330px;text-align:left;">
+    <!-- Elección inicial. El acceso interno queda oculto hasta que se pide,
+         para que la portada sea del cliente y no un formulario de login. -->
+    <div id="pub-elegir" style="margin:22px auto 0;max-width:330px;">
+      <button class="btn-hero" onclick="abrirPublico()"
+              style="width:100%;justify-content:center;font-size:15px;padding:16px 14px;">
+        Quiero un arrendamiento</button>
+      <button class="splash-link" onclick="mostrarLogin()" style="margin-top:14px;">Login</button>
+    </div>
+
+    <div id="lg-box" style="display:none;margin:22px auto 0;max-width:330px;text-align:left;">
       <div style="background:rgba(255,255,255,.97);border-radius:14px;padding:20px 20px 18px;
                   box-shadow:0 18px 44px rgba(0,0,0,.28);">
         <div style="font-family:var(--sans);font-size:12.5px;font-weight:700;color:var(--navy);
@@ -749,6 +796,8 @@ var SK_COT_TPL = "UEsDBBQABgAIAAAAIQBVT94LrAEAAJoGAAATAAgCW0NvbnRlbnRfVHlwZXNdLn
              font-size:11.5px;font-weight:600;padding:7px 9px;border-radius:7px;margin-bottom:11px;
              line-height:1.4;"></div>
         <button class="btn bn" onclick="skLogin()" style="width:100%;justify-content:center;">Entrar</button>
+        <button class="splash-link" onclick="ocultarLogin()"
+                style="width:100%;margin-top:10px;color:var(--txs);">← Volver</button>
       </div>
     </div>
     <div id="splash-acciones" style="display:none;">
@@ -763,6 +812,69 @@ var SK_COT_TPL = "UEsDBBQABgAIAAAAIQBVT94LrAEAAJoGAAATAAgCW0NvbnRlbnRfVHlwZXNdLn
       </div>
       <button class="splash-link" onclick="entrarApp('historial')">Ver historial de cotizaciones</button>
       <div style="margin-top:10px;"><button class="splash-link" onclick="skLogout()">Cerrar sesión</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== COTIZADOR PARA CLIENTES =====
+     Independiente del resto: no requiere sesión, no toca el historial y no
+     muestra nada de la operación con Santander (tasa de descuento, comisión,
+     factoraje, reparto ni TIR). Sólo renta, tabla de pagos y los dos PDF. -->
+<div id="v-publico" style="display:none;">
+  <div class="pub-top">
+    <img id="pub-logo" alt="SK Leasing" class="pub-logo">
+    <button class="btn bg2 bsm" onclick="cerrarPublico()">Salir</button>
+  </div>
+  <div class="pub-wrap">
+    <div class="pub-card">
+      <div class="pub-h">Solicita tu cotización</div>
+      <div class="pub-sub">Llena los datos y obtén tu cotización al momento.</div>
+      <div class="fg" id="pub-form">
+        <div class="fi"><label>Nombre o razón social *</label>
+          <input id="pub-nombre" type="text" placeholder="Ej. Transportes del Norte, S.A. de C.V."></div>
+        <div class="fi"><label>Activo que quieres arrendar *</label>
+          <input id="pub-activo" type="text" placeholder="Ej. Montacargas, camión, maquinaria"></div>
+        <div class="fi"><label>Precio con IVA *</label>
+          <input id="pub-precio" type="number" step="0.01" min="1" placeholder="2500000" oninput="pubCalc()"></div>
+        <div class="fi"><label>Plazo en meses *</label>
+          <select id="pub-plazo" onchange="pubCalc()">
+            <option value="12">12 meses</option><option value="18">18 meses</option>
+            <option value="24">24 meses</option><option value="30">30 meses</option>
+            <option value="36" selected>36 meses</option><option value="42">42 meses</option>
+            <option value="48">48 meses</option><option value="54">54 meses</option>
+            <option value="60">60 meses</option>
+          </select></div>
+        <div class="fi"><label>Valor residual *</label>
+          <select id="pub-residual" onchange="pubCalc()">
+            <option value="0">Sin residual</option><option value="10">10%</option>
+            <option value="20">20%</option><option value="30">30%</option>
+            <option value="40">40%</option>
+          </select></div>
+        <div class="fi"><label>Correo electrónico *</label>
+          <input id="pub-correo" type="email" autocapitalize="none" spellcheck="false" placeholder="nombre@empresa.com"></div>
+        <div class="fi"><label>Teléfono *</label>
+          <input id="pub-tel" type="tel" placeholder="55 1234 5678"></div>
+      </div>
+      <div id="pub-err" class="pub-err"></div>
+
+      <div id="pub-res" class="pub-res">
+        <div class="pub-res-t">Tu renta mensual</div>
+        <div id="pub-renta" class="pub-renta">—</div>
+        <div id="pub-det" class="pub-det"></div>
+      </div>
+
+      <div class="pub-btns">
+        <button class="btn bn" onclick="pubDescargar()" style="width:100%;justify-content:center;">
+          Descargar mi cotización</button>
+        <button class="btn bg2" onclick="pubEnviarWhats()" style="width:100%;justify-content:center;margin-top:8px;">
+          Enviar por WhatsApp</button>
+        <button class="btn bg2" onclick="pubEnviarCorreo()" style="width:100%;justify-content:center;margin-top:8px;">
+          Enviar por correo</button>
+        <button class="btn bg2" onclick="pubCopiar()" style="width:100%;justify-content:center;margin-top:8px;">
+          Copiar mis datos</button>
+      </div>
+      <div class="pub-nota">Cotización informativa, sujeta a aprobación de crédito y a cambios
+        antes de la firma del contrato. Las rentas no incluyen seguro.</div>
     </div>
   </div>
 </div>
@@ -837,11 +949,27 @@ var SK_COT_TPL = "UEsDBBQABgAIAAAAIQBVT94LrAEAAJoGAAATAAgCW0NvbnRlbnRfVHlwZXNdLn
   <div class="ch"><span class="dot"></span>Condiciones Santander</div>
   <div class="cb">
     <div class="fg c4">
-      <div class="fi"><label>Plazo (meses)</label><input type="number" id="inp-plazo" value="36" min="1" max="120" step="1" style="width:80px"></div>
+      <div class="fi"><label id="inp-plazo-etq">Plazo (meses)</label><input type="number" id="inp-plazo" value="36" min="1" max="120" step="1" style="width:80px" oninput="periodoCambio()"></div>
       <div class="fi"><label>Esquema</label><select id="inp-esquema"><option value="BACK END EN PLAZO">Back End en Plazo</option></select></div>
+      <div class="fi"><label style="display:flex;align-items:center;gap:6px;">Operación exenta de IVA
+        <input type="checkbox" id="inp-sin-iva" onchange="calcular()" style="width:auto;margin:0;">
+        <span style="text-transform:none;font-weight:400;font-size:10.5px;">sin IVA</span></label>
+        <div style="font-size:10.5px;color:var(--txs);margin-top:3px;line-height:1.4;">
+          Rentas y activo sin IVA (agroindustria y similares). La comisión y los gastos legales conservan el suyo.</div></div>
+      <div class="fi"><label>Periodicidad de pago</label>
+        <select id="inp-periodicidad" onchange="periodoCambio()">
+          <option value="MENSUAL" selected>Mensual</option>
+          <option value="TRIMESTRAL">Trimestral</option>
+          <option value="SEMESTRAL">Semestral</option>
+          <option value="ANUAL">Anual</option>
+        </select>
+        <div id="inp-periodo-nota" style="font-size:10.5px;color:var(--txs);margin-top:3px;line-height:1.4;"></div></div>
       <div class="fi"><label>Residual (%)</label><input id="inp-residual" type="number" value="0" min="0" max="30" step="0.5"></div>
       <div class="fi"><label>Fecha Cotización</label><input id="inp-fecha" type="date" onchange="calcular()"></div>
       <div class="fi"><label>Fecha de Descuento</label><input id="inp-fecha-desc" type="date" onchange="calcular()"></div>
+      <div class="fi"><label>Fecha 1ª renta <span style="text-transform:none;font-weight:400;">(opcional)</span></label>
+        <input id="inp-fecha-primera" type="date" onchange="calcular()">
+        <div id="inp-primera-nota" style="font-size:10.5px;color:var(--txs);margin-top:3px;line-height:1.4;"></div></div>
     </div>
     <div class="fg c2">
       <div class="fi"><label>Tasa de Descuento Santander (%)</label><input id="inp-tasa" type="number" value="6.94" min="1" max="30" step="0.01"></div>
@@ -925,6 +1053,10 @@ var SK_COT_TPL = "UEsDBBQABgAIAAAAIQBVT94LrAEAAJoGAAATAAgCW0NvbnRlbnRfVHlwZXNdLn
 <div class="brow" style="margin-bottom:18px;">
   <button class="btn bgrn" onclick="guardar()">💾 Guardar en Historial</button>
   <button class="btn bn" onclick="expCot()" title="Cotización en PDF de 2 hojas: cotización + tabla de pagos">📄 Cotización en PDF</button>
+  <label class="btn bg2" style="cursor:pointer;gap:7px;" title="Incluye o quita el bloque de ANÁLISIS FISCAL, con el Costo Real y la Tasa Anual Implícita">
+    <input type="checkbox" id="chk-fiscal" checked style="width:auto;margin:0;">Análisis fiscal</label>
+  <label class="btn bg2" style="cursor:pointer;gap:7px;" title="Divide la columna de renta en SUBTOTAL, IVA y TOTAL en la tabla de pagos">
+    <input type="checkbox" id="chk-desglosa" style="width:auto;margin:0;">Desglosar IVA</label>
   <button class="btn bg2" onclick="expCotPlantilla()" title="Llena la plantilla oficial en Excel">📄 Cotización en Excel (plantilla)</button>
   <button class="btn bo" onclick="expTDExcel()" title="Tabla de Descuento en Excel, formato corporativo con fórmulas vivas">📗 TD en Excel</button>
   <button class="btn bg2" onclick="expTD()" title="Tabla de Descuento en PDF">📊 TD en PDF</button>
@@ -1217,8 +1349,12 @@ function sumarMeses(f,n){
   var mes=((f.m-1+n)%12+12)%12+1;
   return {y:anio,m:mes,d:1};
 }
-function fechasPagos(fechaPrimera,nPagos){
-  var out=[]; for(var i=0;i<nPagos;i++) out.push(sumarMeses(fechaPrimera,i)); return out;
+/* 'paso' son los meses entre pagos (1 mensual, 3 trimestral, 6 semestral,
+   12 anual). Con paso 1 el resultado es el de siempre. */
+function fechasPagos(fechaPrimera,nPagos,paso){
+  var p=paso||1, out=[];
+  for(var i=0;i<nPagos;i++) out.push(sumarMeses(fechaPrimera,i*p));
+  return out;
 }
 
 /* ---------- helpers XML ---------- */
@@ -1303,7 +1439,13 @@ function derivarDatos(ficha){
   var fechaFirma=parseFecha(ficha.fecha_firma);
   var fechaPrimera=parseFecha(ficha.fecha_primera_renta);
   var nPagos=ficha.plazo_meses;
-  var fechaTerm=sumarMeses(fechaPrimera, nPagos-1);
+  /* Periodicidad y meses entre pagos: se calculan una vez y se reutilizan para
+     la fecha de terminación y para lo que se devuelve más abajo. */
+  var periodicidad=ficha.periodicidad||'MENSUAL';
+  var pasoMeses=({MENSUAL:1,TRIMESTRAL:3,SEMESTRAL:6,ANUAL:12}[periodicidad]||1);
+  /* Entre el primer y el último pago hay (nPagos-1) PERIODOS, no meses: con
+     6 pagos semestrales el contrato termina 30 meses después, no 5. */
+  var fechaTerm=sumarMeses(fechaPrimera, (nPagos-1)*pasoMeses);
   var rentaMensual=Math.round(Number(ficha.renta_mensual)*100)/100;
   var rentaUltimoRaw=(ficha.renta_ultimo_pago!==undefined && ficha.renta_ultimo_pago!==null && ficha.renta_ultimo_pago!=='')?ficha.renta_ultimo_pago:rentaMensual;
   var rentaUltimo=Math.round(Number(rentaUltimoRaw)*100)/100;
@@ -1329,6 +1471,10 @@ function derivarDatos(ficha){
     fecha_firma_larga:fechaLarga(fechaFirma),
     fecha_contrato_normativo_larga:fechaNormLarga,
     fecha_primera_renta:fechaPrimera,
+    /* Periodicidad: los documentos la necesitan para las fechas de pago, la
+       temporalidad declarada en el Anexo y el "de cada mes/semestre". */
+    periodicidad: periodicidad,
+    paso_meses: pasoMeses,
     fecha_inicio_larga:fechaLarga(fechaPrimera),
     fecha_terminacion:fechaTerm,
     fecha_terminacion_larga:fechaLarga(fechaTerm),
@@ -1595,7 +1741,14 @@ function generarDoc2(ficha, derivado, xml){
     [82, ' ('],
     [83, montoTotalLetras],
     [86, String(nPagos)],
+    /* El machote lista MENSUAL · TRIMESTRAL · SEMESTRAL · ANUAL como menú de
+       opciones; se deja SÓLO la que aplica para que el contrato afirme la
+       temporalidad en vez de ofrecer cuatro. */
+    [91, ({MENSUAL:'MENSUAL',TRIMESTRAL:'TRIMESTRAL',SEMESTRAL:'SEMESTRAL',ANUAL:'ANUAL'}[derivado.periodicidad]||'MENSUAL')],
+    [92, ''], [93, ''], [94, ''],
     [96, 'PRIMERO'],
+    [97, ' DE CADA '+({MENSUAL:'MES',TRIMESTRAL:'TRIMESTRE',SEMESTRAL:'SEMESTRE',ANUAL:'AÑO'}[derivado.periodicidad]||'MES')
+         +' DURANTE EL PLAZO DEL ARRENDAMIENTO'],
     [99, montoPagoNum],
     [100, ' ('],
     [101, textoPagoCompleto],
@@ -2042,7 +2195,25 @@ function generarDoc4(ficha, derivado, xml){
 }
 
 /* ---------- DOC 5: Pagaré ---------- */
+/* Cuentas de La Acreedora para el depósito de los Pagos Periódicos.
+   El machote trae la de pesos; en operaciones en dólares hay que sustituirla
+   por la cuenta en esa moneda. */
+var SKU_CUENTAS = {
+  MXN: { cuenta:'65-50493277-8', clabe:'014180655049327788' },
+  USD: { cuenta:'82-50068710-6', clabe:'014180825006871065' }
+};
+
 function generarDoc5(ficha, derivado, xml){
+  /* La cuenta y la CLABE viven en runs propios del machote (el 27 y el 29),
+     así que basta sustituir su texto. Se hace ANTES del llenado secuencial
+     para no alterar el conteo de huecos que ese llenado espera. */
+  var cta = SKU_CUENTAS[(ficha.moneda==='USD') ? 'USD' : 'MXN'];
+  if(cta && ficha.moneda==='USD' && typeof reemplazarTextoXml==='function'){
+    var mapaCta = {};
+    mapaCta[SKU_CUENTAS.MXN.cuenta] = cta.cuenta;
+    mapaCta[SKU_CUENTAS.MXN.clabe]  = cta.clabe;
+    xml = reemplazarTextoXml(xml, mapaCta);
+  }
   var arr=ficha.arrendataria;
   var obligados=ficha.obligados_solidarios||[];
   var fechaFirma=derivado.fecha_firma;
@@ -2051,7 +2222,7 @@ function generarDoc5(ficha, derivado, xml){
   var rentaTotal=derivado.renta_total;
   var rentaMensual=derivado.renta_mensual;
   var rentaUltimo=derivado.renta_ultimo;
-  var fechas=fechasPagos(fechaPrimera, nPagos);
+  var fechas=fechasPagos(fechaPrimera, nPagos, derivado.paso_meses||1);
   var v=[];
   var enteroT=Math.floor(rentaTotal);
   var centavosTotal=Math.round((rentaTotal-enteroT)*100);
@@ -2427,18 +2598,38 @@ function skPrimerDiaHabil(d) {
   }
   return r;
 }
-function skSiguienteFechaPago(prevFechaHabil) {
+/* Siguiente fecha de pago. 'paso' son los meses entre pagos: 1 mensual,
+   3 trimestral, 6 semestral, 12 anual. Con paso 1 el resultado es idéntico al
+   de antes, así que las operaciones mensuales no cambian. */
+function skSiguienteFechaPago(prevFechaHabil, paso) {
+  var p = paso || 1;
   var eo = skEomonth(prevFechaHabil);
-  return skPrimerDiaHabil(new Date(eo.getFullYear(), eo.getMonth(), eo.getDate() + 1));
+  var base = new Date(eo.getFullYear(), eo.getMonth(), eo.getDate() + 1);  // día 1 del mes siguiente
+  if (p > 1) base.setMonth(base.getMonth() + (p - 1));
+  return skPrimerDiaHabil(base);
 }
 /* Devuelve [{mes, fecha, dias}] para un descuento y plazo dados. */
-function skCalendarioPagos(fechaDesc, plazo) {
-  var eoDesc = skEomonth(fechaDesc);
-  var actual = skPrimerDiaHabil(new Date(eoDesc.getFullYear(), eoDesc.getMonth(), eoDesc.getDate() + 1));
+/* 'forzada' permite imponer la fecha del primer pago. Si no se da, se deriva
+   del descuento como siempre. Se le aplica igualmente la regla de días
+   hábiles: si la fecha capturada cae en fin de semana o inhábil bancario, se
+   recorre al siguiente hábil. */
+function skCalendarioPagos(fechaDesc, plazo, paso, forzada) {
+  var p = paso || 1;
+  var primero;
+  if (forzada) {
+    primero = new Date(forzada.getFullYear(), forzada.getMonth(), forzada.getDate());
+  } else {
+    var eoDesc = skEomonth(fechaDesc);
+    /* El primer pago cae un PERIODO después del descuento, no un mes: en una
+       operación semestral con descuento en agosto, el primero es en febrero. */
+    primero = new Date(eoDesc.getFullYear(), eoDesc.getMonth(), eoDesc.getDate() + 1);
+    if (p > 1) primero.setMonth(primero.getMonth() + (p - 1));
+  }
+  var actual = skPrimerDiaHabil(primero);
   var out = [];
   for (var mes = 1; mes <= plazo; mes++) {
     out.push({ mes: mes, fecha: new Date(actual.getTime()), dias: daysBetween(fechaDesc, actual) });
-    actual = skSiguienteFechaPago(actual);
+    actual = skSiguienteFechaPago(actual, p);
   }
   return out;
 }
@@ -2643,7 +2834,31 @@ function calcular() {
   }
 
   // Calendario de pagos (motor compartido con la calculadora inversa)
-  var pagos = skCalendarioPagos(fechaDesc, plazo);
+  /* 'plazo' es el NÚMERO DE PAGOS; con periodicidad distinta a mensual, la
+     duración en meses es otra. El despeje de la renta no cambia: ya trabaja
+     con el número de pagos y la suma de días del calendario. */
+  var periodicidad = gEl('inp-periodicidad') ? gEl('inp-periodicidad').value : 'MENSUAL';
+  var pasoMeses = (PERIODOS[periodicidad] || PERIODOS.MENSUAL).meses;
+  var mesesTotales = plazo * pasoMeses;
+  /* Fecha de primera renta: opcional. Vacía, se deriva del descuento. */
+  var elPri = gEl('inp-fecha-primera');
+  var priTxt = elPri ? String(elPri.value||'').trim() : '';
+  var priForzada = priTxt ? new Date(priTxt + 'T12:00:00') : null;   // igual que fechaCot
+  if(priForzada && priForzada <= fechaDesc){
+    showToast('La 1ª renta debe ser posterior a la fecha de descuento','err');
+    return;
+  }
+  var pagos = skCalendarioPagos(fechaDesc, plazo, pasoMeses, priForzada);
+  /* Se avisa si la fecha capturada se movió por caer en día inhábil. */
+  var notaPri = gEl('inp-primera-nota');
+  if(notaPri){
+    if(!priTxt) notaPri.textContent = 'Sin capturar: se calcula desde la fecha de descuento ('
+      + formatDate(pagos[0].fecha) + ')';
+    else if(isoLocal(pagos[0].fecha) !== priTxt)
+      notaPri.textContent = 'La fecha capturada cae en día inhábil; el primer pago se recorre al '
+        + formatDate(pagos[0].fecha);
+    else notaPri.textContent = '';
+  }
   var sumDias = 0;
   for (var pi = 0; pi < pagos.length; pi++) { sumDias += pagos[pi].dias; }
 
@@ -2700,9 +2915,13 @@ function calcular() {
   for (var pk2 = 0; pk2 < pagos.length; pk2++) {
     cfArr.push(pagos[pk2].rentaDisplay);
   }
-  var irrMen = calcIRR(cfArr);
-  var tirNom = irrMen * 12;
-  var tirEf  = Math.pow(1 + irrMen, 12) - 1;
+  /* calcIRR devuelve la tasa POR PERIODO, no por mes. Con pagos semestrales
+     hay 2 periodos al año, no 12: multiplicar por 12 daba una TIR seis veces
+     mayor que la real. */
+  var periodosAnio = 12 / pasoMeses;
+  var irrPer = calcIRR(cfArr);
+  var tirNom = irrPer * periodosAnio;
+  var tirEf  = Math.pow(1 + irrPer, periodosAnio) - 1;
 
   // Fiscal
   // ANALISIS FISCAL — COTIZACION FIN (Excel): la columna J es SIN IVA.
@@ -2718,7 +2937,13 @@ function calcular() {
   var valorNeto = valorCIV - aport;
   var ivaFact   = (factCIV   / (1 + IVA)) * IVA;   // usa la constante IVA, no 1.16 literal
   var ivaValNeto= (valorNeto / (1 + IVA)) * IVA;
-  var utilContable = descTotalCIV - valorNeto - (ivaFact - ivaValNeto) - comSIN - (gastos / (1 + IVA));
+  /* En una operación EXENTA no hay IVA en el factoraje ni en el valor del
+     activo, así que el diferencial de IVA —que en una operación normal SK
+     absorbe— desaparece de la utilidad. La comisión y los gastos legales sí
+     conservan su IVA: son cargos propios, ajenos a la exención de las rentas. */
+  var exentoUtil = !!(gEl('inp-sin-iva') && gEl('inp-sin-iva').checked);
+  var deltaIVA = exentoUtil ? 0 : (ivaFact - ivaValNeto);
+  var utilContable = descTotalCIV - valorNeto - deltaIVA - comSIN - (gastos / (1 + IVA));
 
   CR = {
     folio: genFolio(),
@@ -2727,6 +2952,12 @@ function calcular() {
     cliente: cliente, comercial: comercial, region: region, activo: activo,
     moneda: moneda, plazo: plazo, esquema: esquema,
     resPct: resPct, resCIV: resCIV, tasa: tasa, comPct: comPct,
+    periodicidad: periodicidad, mesesTotales: mesesTotales,
+    sinIVA: exentoUtil,
+    /* Se guarda la fecha REAL del primer pago (ya ajustada a día hábil), para
+       que el descuento y los contratos partan de la misma. */
+    fechaPrimera: isoLocal(pagos[0].fecha),
+    fechaPrimeraCapturada: priTxt,
     gastos: gastos, aport: aport, valorCIV: valorCIV,
     rentaCIV: rentaCIV, rentaSIN: rentaSIN,
     // Último pago = renta + residual. Es el número que viaja a los contratos
@@ -2843,7 +3074,25 @@ function pdfHelpers(doc){
   function t(x,y,s,f,sz,c){ doc.setFont('helvetica',f||'normal'); doc.setFontSize(sz||7); st(c||PDF_BLK); doc.text(String(s),x,y); }
   function tC(x,y,s,f,sz,c){ doc.setFont('helvetica',f||'normal'); doc.setFontSize(sz||7); st(c||PDF_BLK); doc.text(String(s),x,y,{align:'center'}); }
   function tR(x,y,s,f,sz,c){ doc.setFont('helvetica',f||'normal'); doc.setFontSize(sz||7); st(c||PDF_BLK); doc.text(String(s),x,y,{align:'right'}); }
-  return {sf:sf,st:st,box:box,t:t,tC:tC,tR:tR};
+  /* Ancho real del texto con la fuente y el tamaño dados. Es lo que permite
+     decidir si una cadena cabe en su celda antes de dibujarla. */
+  function ancho(s,f,sz){
+    doc.setFont('helvetica',f||'normal'); doc.setFontSize(sz||7);
+    return doc.getTextWidth(String(s==null?'':s));
+  }
+  /* Parte un texto en dos renglones por el espacio más cercano a la mitad,
+     para que las dos líneas queden parejas y no una larga y otra de una palabra. */
+  function partirEnDos(s){
+    var txt=String(s==null?'':s).trim();
+    var pos=[], i=txt.indexOf(' ');
+    while(i>=0){ pos.push(i); i=txt.indexOf(' ', i+1); }
+    if(!pos.length) return [txt, ''];
+    var medio=txt.length/2, mejor=pos[0];
+    for(var k=1;k<pos.length;k++)
+      if(Math.abs(pos[k]-medio) < Math.abs(mejor-medio)) mejor=pos[k];
+    return [txt.slice(0,mejor).trim(), txt.slice(mejor+1).trim()];
+  }
+  return {sf:sf,st:st,box:box,t:t,tC:tC,tR:tR,ancho:ancho,partirEnDos:partirEnDos};
 }
 
 function pdfFechaLarga(iso){ // 'YYYY-MM-DD' → 'DD/MM/YYYY'
@@ -2972,7 +3221,7 @@ function cotSerialFecha(iso){
 function cotLlenarPlantilla(r){
   if(typeof JSZip==='undefined') return Promise.reject(new Error('JSZip no disponible'));
   if(typeof SK_COT_TPL==='undefined') return Promise.reject(new Error('Plantilla no embebida'));
-  var IVAr=0.16, plazo=r.plazo, anios=plazo/12;
+  var IVAr=0.16, plazo=r.plazo, meses=mesesDe(r), anios=meses/12;
   var precioS=r.valorCIV/(1+IVAr);
   var rentaS=r.rentaSIN, rentaIVA=r.rentaCIV-r.rentaSIN;
   var resS=r.resCIV/(1+IVAr), resIVA=r.resCIV-resS;
@@ -2991,7 +3240,7 @@ function cotLlenarPlantilla(r){
     J16: celularFor(r.comercial), D16: cotSerialFecha(r.fechaCot),
     G23: r.activo||'', G24: r.valorCIV,
     J33: r.esquema||'', J36: r.moneda||'MXN',
-    B37: 'PLAZO SUCESIVO EN MES '+plazo,
+    B37: 'PLAZO SUCESIVO EN MES '+meses,
     D33: plazo, E33: rentaS,  F33: rentaIVA,  G33: r.rentaCIV,
     D41: 1,     E41: resS,    F41: resIVA,    G41: r.resCIV,
     E49: rentaS,  F49: rentaIVA,  G49: r.rentaCIV,
@@ -3009,7 +3258,7 @@ function cotLlenarPlantilla(r){
     J55: 0, K55: 0, L55: 0,
     J57: desemUlt,    K57: desemUlt*0.30,    L57: desemUlt*0.70,
     J59: totDesem,    K59: totBenef,         L59: totNeto,
-    J61: costoReal,   K61: 'A '+plazo+' MESES',
+    J61: costoReal,   K61: 'A '+meses+' MESES',
     J63: markup/anios, K63: costoReal/anios,
     /* Se vacían por indicación: el markup de control y el rótulo del banco. */
     J60: '', A62: ''
@@ -3038,6 +3287,277 @@ function expCotPlantilla(r){
     setTimeout(function(){ URL.revokeObjectURL(url); },4000);
     showToast('Cotización generada sobre la plantilla oficial ✓','ok');
   }).catch(function(e){ showToast('No se pudo generar: '+e.message,'err'); });
+}
+
+/* ═══ COTIZADOR PARA CLIENTES ═══
+   Flujo aparte del sistema interno: no pide sesión, no escribe en el historial
+   y nunca muestra la operación con Santander. Cotiza siempre con tasa de
+   descuento 10 % y comisión 4 %, y sólo entrega la cotización y la tabla de
+   pagos, que son las dos hojas que no contienen tasa, comisión, factoraje,
+   reparto ni TIR. */
+/* ► CAMBIA AQUÍ los datos a donde deben llegar las solicitudes de clientes.
+   El teléfono va en formato internacional sin signos: 52 + 10 dígitos. */
+var SK_CONTACTO = {
+  correo:   'contacto@skleasing.mx',
+  whatsapp: '5215525316177',
+  nombre:   'SK Leasing'
+};
+
+var PUB_TASA = 0.10;      // tasa de descuento fija
+var PUB_COM  = 0.04;      // comisión fija
+var PUB_R    = null;      // último cálculo
+
+/* Cotiza usando EL MISMO calcular() del sistema interno. Se escriben los
+   campos del formulario, se calcula y se restauran los valores previos.
+   Duplicar aquí la matemática sería más limpio de leer, pero las dos copias
+   se desviarían en cuanto se toque el motor; así el cliente y el interno
+   cotizan por definición igual. */
+function skCotizar(d){
+  /* Deben listarse TODOS los campos que lee calcular(): si alguno se queda sin
+     fijar, el cálculo hereda lo que el usuario interno tuviera puesto. Pasó con
+     la periodicidad: con el formulario interno en semestral, el cliente pedía
+     36 pagos y el motor los interpretaba como 36 SEMESTRES (18 años), el
+     denominador se volvía negativo y la cotización fallaba. */
+  var campos = ['inp-cliente','inp-comercial','inp-region','inp-activo','inp-moneda',
+                'inp-esquema','inp-valor','inp-plazo','inp-residual','inp-tasa',
+                'inp-comision','inp-gastos','inp-aportacion','inp-fecha','inp-fecha-desc',
+                'inp-periodicidad','inp-fecha-primera'];
+  var previo = {}, i;
+  for(i=0;i<campos.length;i++){ var e=gEl(campos[i]); if(e) previo[campos[i]]=e.value; }
+  var autoPrevio = GASTOS_AUTO;
+  var crPrevio = CR;
+
+  function set(id,v){ var e=gEl(id); if(e) e.value=String(v); }
+  set('inp-cliente', d.cliente||'CLIENTE');
+  set('inp-comercial', d.comercial||'');
+  set('inp-region', d.region||'');
+  set('inp-activo', d.activo||'ACTIVO');
+  set('inp-moneda', d.moneda||'MXN');
+  set('inp-esquema', d.esquema||'BACK END EN PLAZO');
+  set('inp-valor', d.valorCIV);
+  set('inp-plazo', d.plazo);
+  set('inp-residual', d.resPct||0);
+  set('inp-tasa', (d.tasa*100));
+  set('inp-comision', (d.comPct*100));
+  set('inp-gastos', d.gastos||0);
+  set('inp-aportacion', d.aport||0);
+  set('inp-fecha', d.fechaCot||isoLocal(new Date()));
+  set('inp-fecha-desc', d.fechaDesc||'');
+  set('inp-periodicidad', d.periodicidad||'MENSUAL');
+  set('inp-fecha-primera', d.fechaPrimera||'');   // el cliente no la elige: se deriva
+  GASTOS_AUTO = true;                      // el tramo lo fija el valor del activo
+
+  var res = null;
+  try{ calcular(); res = CR ? deserRec(JSON.parse(JSON.stringify(CR))) : null; }
+  catch(e){ res = null; }
+
+  // restaurar el estado del formulario interno
+  for(i=0;i<campos.length;i++){ var e2=gEl(campos[i]); if(e2 && previo[campos[i]]!==undefined) e2.value=previo[campos[i]]; }
+  GASTOS_AUTO = autoPrevio;
+  CR = crPrevio;
+  return res;
+}
+
+function mostrarLogin(){
+  gEl('pub-elegir').style.display='none';
+  gEl('lg-box').style.display='';
+  var u=gEl('lg-user'); if(u) u.focus();
+}
+function ocultarLogin(){
+  gEl('lg-box').style.display='none';
+  gEl('pub-elegir').style.display='';
+  var e=gEl('lg-err'); if(e) e.style.display='none';
+}
+function abrirPublico(){
+  var lg=gEl('pub-logo');
+  if(lg && typeof LOGO_URI!=='undefined') lg.src=LOGO_URI;
+  gEl('v-publico').style.display='block';
+  window.scrollTo(0,0);
+  pubCalc();
+}
+function cerrarPublico(){ gEl('v-publico').style.display='none'; }
+
+function pubErr(m){
+  var e=gEl('pub-err');
+  if(!e) return;
+  e.textContent=m||'';
+  e.style.display=m?'block':'none';
+  e.style.background='#fdecec'; e.style.borderColor='#e9a8a8'; e.style.color='#9d2b2b';
+}
+
+/* Calcula con el motor del cotizador y muestra sólo la renta. */
+function pubCalc(){
+  var precio=parseFloat((gEl('pub-precio')||{}).value)||0;
+  var plazo =parseInt((gEl('pub-plazo')||{}).value,10)||0;
+  var resPct=parseFloat((gEl('pub-residual')||{}).value)||0;
+  var caja=gEl('pub-res');
+  if(!(precio>0 && plazo>0)){
+    PUB_R=null;
+    if(caja) caja.style.display='none';
+    return null;
+  }
+  var r = skCotizar({
+    cliente:(gEl('pub-nombre')||{}).value||'', comercial:'', region:'',
+    activo:(gEl('pub-activo')||{}).value||'', moneda:'MXN',
+    esquema:'BACK END EN PLAZO', valorCIV:precio, plazo:plazo, resPct:resPct,
+    tasa:PUB_TASA, comPct:PUB_COM,
+    gastos:gastosPorValor(precio,'MXN'), aport:0,
+    fechaCot:isoLocal(new Date()), fechaDesc:''
+  });
+  PUB_R=r;
+  if(!r){
+    /* Sin esto la caja conservaba la renta del cálculo anterior y el cliente
+       veía un importe que no corresponde al plazo que acaba de elegir. */
+    if(caja) caja.style.display='none';
+    pubErr('No pudimos calcular con esos datos. Revisa el precio y el plazo, '
+      +'o escríbenos y lo vemos contigo.');
+    return null;
+  }
+  pubErr('');
+  if(caja && r){
+    caja.style.display='';
+    gEl('pub-renta').textContent=fmtM(r.rentaCIV);
+    var d = plazo+' pagos mensuales · IVA incluido';
+    if(r.resCIV>0) d += '<br>Último pago con valor residual: '+fmtM(r.rentaCIV+r.resCIV);
+    d += '<br>Primer pago: '+formatDate(r.pagos[0].fecha);
+    gEl('pub-det').innerHTML=d;
+  }
+  return r;
+}
+
+/* Valida y devuelve los datos de contacto, o null si falta algo. */
+function pubDatos(){
+  var v=function(id){ var e=gEl(id); return e?String(e.value||'').trim():''; };
+  var nombre=v('pub-nombre'), activo=v('pub-activo');
+  var precio=parseFloat(v('pub-precio'))||0;
+  var correo=v('pub-correo'), tel=v('pub-tel');
+  if(!nombre)  return pubErr('Escribe tu nombre o razón social.'), null;
+  if(!activo)  return pubErr('Indica qué activo quieres arrendar.'), null;
+  if(!(precio>0)) return pubErr('Captura el precio del activo con IVA.'), null;
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) return pubErr('Revisa tu correo electrónico.'), null;
+  if(v('pub-tel').replace(/\D/g,'').length<10) return pubErr('El teléfono debe tener al menos 10 dígitos.'), null;
+  pubErr('');
+  return { nombre:nombre, activo:activo, correo:correo, tel:tel };
+}
+
+function pubDescargar(){
+  var d=pubDatos(); if(!d) return;
+  var r=pubCalc();
+  if(!r){ pubErr('Revisa el precio y el plazo.'); return; }
+  /* Se marcan los datos de contacto en el registro para que aparezcan en la
+     cotización; así, si el cliente reenvía el PDF, SK ve con quién contactar. */
+  r.cliente=d.nombre; r.activo=d.activo;
+  r.comercial='SK LEASING'; r.contacto=d.correo+' · '+d.tel;
+  try{
+    var doc=new window.jspdf.jsPDF({unit:'pt',format:'a4'});
+    pdfDrawCot(doc,r);
+    doc.addPage();
+    pdfDrawTP(doc,r);
+    doc.save('Cotizacion_'+pdfSafeName(d.nombre)+'_'+r.plazo+'M.pdf');
+    showToast('Cotización descargada ✓','ok');
+  }catch(e){ pubErr('No se pudo generar el PDF: '+e.message); }
+}
+
+/* Sin servidor nada puede enviarse solo: hay que abrir una app del cliente.
+   Se ofrecen tres vías porque cada una falla en escenarios distintos —el
+   correo no abre si el teléfono no tiene cuenta configurada, y desde una app
+   instalada iOS suele ignorar mailto sin avisar—, y siempre queda copiar. */
+function pubMensaje(d, r){
+  return 'Hola, me interesa un arrendamiento con estas condiciones:\n\n'+
+    'Nombre o razón social: '+d.nombre+'\n'+
+    'Activo: '+d.activo+'\n'+
+    'Precio con IVA: '+fmtM(r.valorCIV)+'\n'+
+    'Plazo: '+r.plazo+' meses\n'+
+    'Valor residual: '+(r.resCIV>0?fmtM(r.resCIV):'sin residual')+'\n'+
+    'Renta mensual estimada: '+fmtM(r.rentaCIV)+'\n\n'+
+    'Mis datos de contacto:\n'+
+    'Correo: '+d.correo+'\n'+
+    'Teléfono: '+d.tel;
+}
+/* Abrir con un <a> y no con location.href: en apps instaladas la navegación
+   directa a mailto/whatsapp se bloquea, el clic en un ancla no. */
+function pubAbrir(url){
+  var a=document.createElement('a');
+  a.href=url; a.target='_blank'; a.rel='noopener';
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ document.body.removeChild(a); }, 0);
+}
+function pubEnviarWhats(){
+  var d=pubDatos(); if(!d) return;
+  var r=pubCalc(); if(!r){ pubErr('Revisa el precio y el plazo.'); return; }
+  pubAbrir('https://wa.me/'+SK_CONTACTO.whatsapp+'?text='+encodeURIComponent(pubMensaje(d,r)));
+  pubAviso('Abriendo WhatsApp… si no abre, usa "Copiar mis datos".');
+}
+function pubEnviarCorreo(){
+  var d=pubDatos(); if(!d) return;
+  var r=pubCalc(); if(!r){ pubErr('Revisa el precio y el plazo.'); return; }
+  pubAbrir('mailto:'+SK_CONTACTO.correo
+    +'?subject='+encodeURIComponent('Solicitud de arrendamiento — '+d.nombre)
+    +'&body='+encodeURIComponent(pubMensaje(d,r)));
+  pubAviso('Abriendo tu correo… si no abre, usa "Copiar mis datos".');
+}
+function pubCopiar(){
+  var d=pubDatos(); if(!d) return;
+  var r=pubCalc(); if(!r){ pubErr('Revisa el precio y el plazo.'); return; }
+  var texto=pubMensaje(d,r)+'\n\nEnviar a: '+SK_CONTACTO.correo;
+  function ok(){ pubAviso('Datos copiados. Pégalos en un correo o WhatsApp a '+SK_CONTACTO.correo); }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(texto).then(ok).catch(function(){ pubCopiarRespaldo(texto, ok); });
+  } else pubCopiarRespaldo(texto, ok);
+}
+/* Respaldo para navegadores sin API de portapapeles o sin permiso. */
+function pubCopiarRespaldo(texto, ok){
+  var ta=document.createElement('textarea');
+  ta.value=texto; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  var bien=false;
+  try{ bien=document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta);
+  if(bien) ok(); else pubErr('No se pudo copiar. Toma una captura de pantalla o escríbenos a '+SK_CONTACTO.correo);
+}
+/* Aviso en verde, distinto del error en rojo. */
+function pubAviso(m){
+  var e=gEl('pub-err'); if(!e) return;
+  e.textContent=m;
+  e.style.display='block';
+  e.style.background='#f2fbf5'; e.style.borderColor='#9ccfae'; e.style.color='#1d8a52';
+}
+
+/* ═══ PERIODICIDAD DE LOS PAGOS ═══
+   El cotizador asume renta mensual, pero hay operaciones con pagos
+   semestrales, trimestrales o anuales: el número de PAGOS deja de coincidir
+   con el número de MESES. Dos datos opcionales del registro lo resuelven:
+     r.periodicidad  'MENSUAL' (omisión) · 'TRIMESTRAL' · 'SEMESTRAL' · 'ANUAL'
+     r.mesesTotales  duración real en meses; sin él se asume igual al nº de pagos
+   Importa sobre todo para anualizar: con 6 pagos semestrales, dividir entre
+   6/12 daría una tasa del doble de la real. */
+var PERIODOS = {
+  MENSUAL:   { meses:1,  renta:'Renta Mensual',    tabla:'RENTA MENSUAL' },
+  TRIMESTRAL:{ meses:3,  renta:'Renta Trimestral', tabla:'RENTA TRIMESTRAL' },
+  SEMESTRAL: { meses:6,  renta:'Renta Semestral',  tabla:'RENTA SEMESTRAL' },
+  ANUAL:     { meses:12, renta:'Renta Anual',      tabla:'RENTA ANUAL' }
+};
+function periodoDe(r){
+  return PERIODOS[(r && r.periodicidad) ? String(r.periodicidad).toUpperCase() : 'MENSUAL'] || PERIODOS.MENSUAL;
+}
+/* Duración real en meses: la declarada, o pagos × meses por periodo. */
+function mesesDe(r){
+  if(r && r.mesesTotales) return r.mesesTotales;
+  return (r ? r.plazo : 0) * periodoDe(r).meses;
+}
+
+/* Aclara qué significa el plazo cuando los pagos no son mensuales: el campo
+   "Plazo" es el número de PAGOS, no de meses, y eso se presta a confusión. */
+function periodoCambio(){
+  var sel=gEl('inp-periodicidad'), nota=gEl('inp-periodo-nota');
+  if(!sel||!nota) return;
+  var per=PERIODOS[sel.value]||PERIODOS.MENSUAL;
+  var n=parseInt((gEl('inp-plazo')||{}).value,10)||0;
+  var etq=gEl('inp-plazo-etq');
+  if(etq) etq.textContent = (per.meses===1) ? 'Plazo (meses)' : 'Número de pagos';
+  if(per.meses===1 || !n){ nota.textContent=''; }
+  else nota.textContent = n+' pagos cada '+per.meses+' meses = '+(n*per.meses)+' meses de arrendamiento';
+  if(typeof CR!=='undefined' && CR) calcular();
 }
 
 function pdfDrawCot(doc,r){
@@ -3103,6 +3623,38 @@ function pdfDrawCot(doc,r){
     if(alin==='l') h.t(c.x+3, baseline(y,a,t), String(texto), 'bold', t, PDF_BLK);
     else h.tC(c.x+c.w/2, baseline(y,a,t), String(texto), 'bold', t, PDF_BLK);
   }
+  /* Igual que celdaTexto, pero garantiza que el contenido QUEPA. Los nombres
+     largos de razón social se salían de la celda y quedaban cortados.
+     Se prueba tamaño por tamaño, de mayor a menor, y en cada uno se deja que
+     jsPDF reparta el texto en renglones; se acepta el primer tamaño cuyo
+     reparto quepa a lo alto y a lo ancho. splitTextToSize parte también
+     palabras sueltas larguísimas, que un corte por espacios no resolvería. */
+  function celdaAjustada(c,y,texto,alto,tam,alin){
+    var a=alto||G.altoF, t=tam||6.4, txt=String(texto==null?'':texto).trim();
+    var util=c.w-6, PISO=3.6;
+    borde(c.x,y,c.w,a);
+    if(!txt) return;
+    var elegido=null;
+    for(var tt=t; tt>=PISO; tt-=0.2){
+      doc.setFont('helvetica','bold'); doc.setFontSize(tt);
+      var lin=doc.splitTextToSize(txt, util);
+      /* Interlínea de 1.05 para apretar sin que los renglones se toquen. */
+      if(lin.length*tt*1.05 <= a-1.2){ elegido={t:tt, lin:lin}; break; }
+    }
+    if(!elegido){   // ni al mínimo cabe: se usa el mínimo y se corta lo que sobre
+      doc.setFont('helvetica','bold'); doc.setFontSize(PISO);
+      var todas=doc.splitTextToSize(txt, util);
+      var caben=Math.max(1, Math.floor((a-1.2)/(PISO*1.05)));
+      elegido={t:PISO, lin:todas.slice(0,caben)};
+    }
+    var n=elegido.lin.length, tz=elegido.t, paso=tz*1.05;
+    var y0=y + (a - n*paso)/2 + tz*0.80;
+    for(var k=0;k<n;k++){
+      var yy=y0 + k*paso;
+      if(alin==='l') h.t(c.x+3, yy, elegido.lin[k], 'bold', tz, PDF_BLK);
+      else h.tC(c.x+c.w/2, yy, elegido.lin[k], 'bold', tz, PDF_BLK);
+    }
+  }
   /* Formato contable como el original: el "$" pegado a la izquierda y el
      importe alineado a la derecha; el cero se imprime como guion. */
   function celdaMoneda(c,y,v,alto,tam,sinBorde){
@@ -3120,13 +3672,34 @@ function pdfDrawCot(doc,r){
   }
 
   // ── datos derivados ──
-  var plazo=r.plazo, anios=plazo/12;
-  var precioS=r.valorCIV/(1+IVAr);
-  var rentaS=r.rentaSIN, rentaIVA=r.rentaCIV-r.rentaSIN;
-  var resS=r.resCIV/(1+IVAr), resIVA=r.resCIV-resS;
+  var plazo=r.plazo, meses=mesesDe(r), anios=meses/12, per=periodoDe(r);
+  /* r.sinIVA: operaciones exentas (p. ej. agroindustria). Los importes YA son
+     sin IVA, así que no se desglosa nada: la columna IVA va en cero y el total
+     es el mismo importe. El desembolso del análisis fiscal pasa a ser el total,
+     no el importe sin IVA, porque aquí coinciden.
+     Los gastos legales conservan su IVA: son un gasto propio, ajeno a la
+     exención de las rentas. */
+  var exento = !!r.sinIVA;
+  var precioS = exento ? r.valorCIV : r.valorCIV/(1+IVAr);
+  var rentaS  = exento ? r.rentaCIV : r.rentaSIN;
+  var rentaIVA= exento ? 0 : (r.rentaCIV-r.rentaSIN);
+  var resS    = exento ? r.resCIV : r.resCIV/(1+IVAr);
+  var resIVA  = exento ? 0 : (r.resCIV-resS);
   var gastosS=r.gastos/(1+IVAr), gastosIVA=r.gastos-gastosS;
-  var aportS=r.aport/(1+IVAr), aportIVA=r.aport-aportS;
-  var fiscal=[['Rentas',rentaS*plazo],['Aportación Extraordinaria',aportS],
+  var aportS  = exento ? r.aport : r.aport/(1+IVAr);
+  var aportIVA= exento ? 0 : (r.aport-aportS);
+  /* Con renta escalonada el desembolso NO es la renta por el plazo: hay que
+     sumar cada tramo. Con 3 pagos de 10,000 y 57 de 196,192.24, multiplicar la
+     renta dominante por 60 sobrestimaba el desembolso en más de un millón. */
+  var totalRentas = rentaS*plazo;
+  if(r.tramos && r.tramos.length){
+    totalRentas = 0;
+    for(var tt=0; tt<r.tramos.length; tt++){
+      var it = r.tramos[tt].importe;
+      totalRentas += (exento ? it : it/(1+IVAr)) * r.tramos[tt].n;
+    }
+  }
+  var fiscal=[['Rentas',totalRentas],['Aportación Extraordinaria',aportS],
               ['Comisión por apertura',0],['Rentas Proporcionales',0],['Ultimo Pago',resS]];
   var totDesem=0; for(var q=0;q<fiscal.length;q++) totDesem+=fiscal[q][1];
   var totBenef=totDesem*0.30, totNeto=totDesem-totBenef;
@@ -3148,35 +3721,74 @@ function pdfDrawCot(doc,r){
     var y=G.filaCli[i];
     if(izq[i][0]){
       etiqueta({x:G.izqEtq.x,w:G.izqEtq.w}, y, izq[i][0], G.altoCli, 6.4, NAVY);
-      celdaTexto({x:G.izqVal.x,w:G.izqVal.w}, y, izq[i][1], G.altoCli, 6.4);
+      /* El renglón intermedio del bloque izquierdo va vacío (sólo CLIENTE y
+         FECHA se usan), así que la celda del CLIENTE puede crecer hacia abajo
+         cuando el nombre lo necesita. Con la altura de un solo renglón, una
+         razón social larga se quedaba sin su "S.A. DE C.V.". */
+      var altoCel = G.altoCli;
+      if(i===0){
+        var utilCli = G.izqVal.w-6;
+        doc.setFont('helvetica','bold'); doc.setFontSize(6.4);
+        if(doc.getTextWidth(String(izq[0][1]||'')) > utilCli*1.9)
+          altoCel = (G.filaCli[2]-G.filaCli[0]) - 1.5;   // hasta el borde de FECHA
+      }
+      celdaAjustada({x:G.izqVal.x,w:G.izqVal.w}, y, izq[i][1], altoCel, 6.4);
     }
     etiqueta({x:G.derEtq.x,w:G.derEtq.w}, y, der[i][0], G.altoCli, 6.0, NAVY);
-    celdaTexto({x:G.derVal.x,w:G.derVal.w}, y, der[i][1], G.altoCli, 6.0);
+    celdaAjustada({x:G.derVal.x,w:G.derVal.w}, y, der[i][1], G.altoCli, 6.0);
   }
 
   // ── descripción del activo ──
   banda(G.hoja.x, G.desc.y, G.hoja.w, G.desc.h, 'DESCRIPCIÓN DEL ACTIVO', 8);
   /* En este bloque el original centra el importe como una sola cadena
      ("$11,626,680.00"), no en formato contable con el signo separado. */
-  var act=[['ACTIVO', r.activo], ['PRECIO CON IVA', fmtM(r.valorCIV)],
+  var act=[['ACTIVO', r.activo], [(exento?'PRECIO SIN IVA':'PRECIO CON IVA'), fmtM(r.valorCIV)],
            ['ACCESORIOS ', 'N/A'], ['SEGURO FINANCIADO', 'N/A']];
   for(i=0;i<act.length;i++){
     var ya=G.act.y+i*G.act.alto;
     h.t(G.act.etqX, baseline(ya,G.act.alto,6.4), act[i][0], 'bold', 6.4, PDF_BLK);
-    celdaTexto({x:G.act.valX, w:G.act.valW}, ya, act[i][1], G.act.alto, 6.4);
+    celdaAjustada({x:G.act.valX, w:G.act.valW}, ya, act[i][1], G.act.alto, 6.4);
   }
 
   // ── tabla de rentas (reutilizada para plazo sucesivo) ──
-  function tabla(cfg, titulo, etqFila, vals){
+  /* 'filas' es un arreglo: cada elemento es [etiqueta, meses, importe, iva,
+     total]. Con renta escalonada hay un renglón por tramo; con renta pareja,
+     uno solo, exactamente como antes. Devuelve la Y donde terminó, para que el
+     bloque siguiente se recorra si hicieron falta renglones extra. */
+  function tabla(cfg, titulo, filas){
     banda(G.subIzq.x, cfg.banda, G.subIzq.w, G.subIzq.h, titulo, 7);
     var enc=['MESES','IMPORTE','IVA','TOTAL'];
     for(var k=0;k<4;k++) etiqueta(G.cols[k], cfg.cab, enc[k], 10.8, 6.4);
-    etiqueta(G.tabEtq, cfg.fila, etqFila, G.altoF, 6.4);
-    celdaTexto(G.cols[0], cfg.fila, vals[0], G.altoF, 6.0);
-    for(k=1;k<4;k++) celdaMoneda(G.cols[k], cfg.fila, vals[k], G.altoF, 6.0);
+    for(var f=0; f<filas.length; f++){
+      var yf = cfg.fila + f*G.altoF;
+      etiqueta(G.tabEtq, yf, filas[f][0], G.altoF, 6.4);
+      celdaTexto(G.cols[0], yf, filas[f][1], G.altoF, 6.0);
+      for(k=1;k<4;k++) celdaMoneda(G.cols[k], yf, filas[f][1+k], G.altoF, 6.0);
+    }
+    return cfg.fila + filas.length*G.altoF;
   }
-  tabla(G.rentas, 'RENTAS LINEALES', ' Renta Mensual', [String(plazo), rentaS, rentaIVA, r.rentaCIV]);
-  tabla(G.plazo,  'PLAZO SUCESIVO EN MES '+plazo, ' Plazo', ['1', resS, resIVA, r.resCIV]);
+
+  /* Tramos de renta escalonada: [{n:pagos, importe:monto}]. El último pago
+     lleva el residual y se muestra aparte, en PLAZO SUCESIVO. */
+  var filasRenta = [];
+  if(r.tramos && r.tramos.length){
+    for(var tr=0; tr<r.tramos.length; tr++){
+      var imp = r.tramos[tr].importe;
+      var impS = exento ? imp : imp/(1+IVAr);
+      /* Un tramo en cero es un periodo de gracia: se rotula así en vez de
+         "Renta Mensual", que junto a un importe de cero se lee como error. */
+      var etq = (Math.abs(imp) < 0.005) ? ' Periodo de gracia' : (' '+per.renta);
+      filasRenta.push([etq, String(r.tramos[tr].n), impS, exento?0:(imp-impS), imp]);
+    }
+  } else {
+    filasRenta.push([' '+per.renta, String(plazo), rentaS, rentaIVA, r.rentaCIV]);
+  }
+  var finRentas = tabla(G.rentas, 'RENTAS LINEALES', filasRenta);
+  /* Si los tramos ocuparon renglones de más, el bloque del plazo sucesivo baja
+     lo necesario para no encimarse. */
+  var corrim = Math.max(0, finRentas - (G.rentas.fila + G.altoF) - 8);
+  var cfgPlazo = {banda:G.plazo.banda+corrim, cab:G.plazo.cab+corrim, fila:G.plazo.fila+corrim};
+  tabla(cfgPlazo, 'PLAZO SUCESIVO EN MES '+meses, [[' Plazo', '1', resS, resIVA, r.resCIV]]);
 
   // ── panel derecho ──
   var panel=[['PROGRAMA','ALIANZA SANTANDER'],['ESQUEMA',r.esquema],['MONEDA',r.moneda]];
@@ -3187,17 +3799,33 @@ function pdfDrawCot(doc,r){
   }
 
   // ── pago inicial + análisis fiscal ──
+  /* r.sinFiscal omite todo el bloque de ANÁLISIS FISCAL: el desembolso, el
+     beneficio, el Costo Real y la Tasa Anual Implícita. Útil cuando la
+     cotización va a un cliente que no debe ver el efecto fiscal, o cuando lo
+     revisa su contador con otros supuestos de tasa de ISR. */
+  var conFiscal = !r.sinFiscal;
   banda(G.subIzq.x, G.piBanda, G.subIzq.w, G.subIzq.h, 'PAGO INICIAL', 7);
-  banda(G.afBanda.x, G.piBanda, G.afBanda.w, G.subIzq.h, 'ANÁLISIS FISCAL', 7);
+  if(conFiscal) banda(G.afBanda.x, G.piBanda, G.afBanda.w, G.subIzq.h, 'ANÁLISIS FISCAL', 7);
   var encPI=['IMPORTE','IVA','TOTAL'];
   for(i=0;i<3;i++) etiqueta(G.piCols[i], G.piCab, encPI[i], 7.9, 6.0);
-  var encAF=['CONCEPTO','DESEMBOLSO','BENEFICIO FISCAL','NETO'];
-  for(i=0;i<4;i++) etiqueta(G.afCols[i], G.piCab, encAF[i], 7.9, i===2?5.4:6.0);
+  if(conFiscal){
+    var encAF=['CONCEPTO','DESEMBOLSO','BENEFICIO FISCAL','NETO'];
+    for(i=0;i<4;i++) etiqueta(G.afCols[i], G.piCab, encAF[i], 7.9, i===2?5.4:6.0);
+  }
 
-  var pagoIni=[['Primera Renta',rentaS,rentaIVA,r.rentaCIV],
+  /* La primera renta es la del PRIMER tramo, no la dominante. */
+  var pri = (r.tramos && r.tramos.length) ? r.tramos[0].importe : r.rentaCIV;
+  var priS = exento ? pri : pri/(1+IVAr);
+  /* Comisión de apertura que se cobra AL CLIENTE al firmar. Es distinta de la
+     comisión de Santander, que se descuenta del flujo y no se le muestra al
+     cliente. Este renglón venía fijo en cero; el banco pide que aparezca
+     cuando efectivamente se cobra. */
+  var comAp  = Number(r.comisionApertura)||0;
+  var comApS = exento ? comAp : comAp/(1+IVAr);
+  var pagoIni=[['Primera Renta',priS,(exento?0:pri-priS),pri],
                ['Renta en Garantía',0,0,0],
                ['Aportación Extraordinaria',aportS,aportIVA,r.aport],
-               ['Comisión ',0,0,0],
+               ['Comisión ',comApS,(exento?0:comAp-comApS),comAp],
                ['Gastos Legales',gastosS,gastosIVA,r.gastos],
                ['Rentas Proporcionales',0,0,0]];
   var tI=0,tV=0,tT=0;
@@ -3206,7 +3834,7 @@ function pdfDrawCot(doc,r){
     etiqueta(G.piEtq, yf, pagoIni[i][0], G.altoF, 5.6);
     for(var c=0;c<3;c++) celdaMoneda(G.piCols[c], yf, pagoIni[i][1+c], G.altoF, 6.0);
     tI+=pagoIni[i][1]; tV+=pagoIni[i][2]; tT+=pagoIni[i][3];
-    if(i<fiscal.length){
+    if(conFiscal && i<fiscal.length){
       celdaTexto(G.afCols[0], yf, fiscal[i][0], G.altoF, 5.8, 'l');
       var d=fiscal[i][1], b=d*0.30;
       celdaMoneda(G.afCols[1], yf, d, G.altoF, 6.0);
@@ -3215,23 +3843,27 @@ function pdfDrawCot(doc,r){
     }
   }
   // Totales del análisis fiscal en el último renglón de la rejilla
-  var yTotAF=G.filas[5];
-  celdaTexto(G.afCols[0], yTotAF, 'Totales', G.altoF, 5.8, 'l');
-  celdaMoneda(G.afCols[1], yTotAF, totDesem, G.altoF, 6.0);
-  celdaMoneda(G.afCols[2], yTotAF, totBenef, G.altoF, 6.0);
-  celdaMoneda(G.afCols[3], yTotAF, totNeto,  G.altoF, 6.0);
+  if(conFiscal){
+    var yTotAF=G.filas[5];
+    celdaTexto(G.afCols[0], yTotAF, 'Totales', G.altoF, 5.8, 'l');
+    celdaMoneda(G.afCols[1], yTotAF, totDesem, G.altoF, 6.0);
+    celdaMoneda(G.afCols[2], yTotAF, totBenef, G.altoF, 6.0);
+    celdaMoneda(G.afCols[3], yTotAF, totNeto,  G.altoF, 6.0);
+  }
   // El markup de control (33.50%) se omite por indicación.
   // totales del pago inicial
   for(i=0;i<3;i++) celdaMoneda(G.piCols[i], G.yCosto, [tI,tV,tT][i], G.altoF, 6.0);
-  // costo real y tasa anual
-  etiqueta(G.afCols[0], G.yCosto, 'Costo Real', G.altoF, 5.8);
-  celdaPct(G.afCols[1], G.yCosto, costoReal, G.altoF, 6.0);
-  celdaTexto({x:G.afCols[2].x, w:G.afCols[2].w+G.afCols[3].w}, G.yCosto, 'A '+plazo+' MESES', G.altoF, 6.0);
-  etiqueta(G.afCols[0], G.yTasa, 'Tasa Anual Implícita', G.altoF, 5.8);
-  celdaPct(G.afCols[1], G.yTasa, markup/anios, G.altoF, 6.0);
-  celdaPct(G.afCols[2], G.yTasa, costoReal/anios, G.altoF, 6.0);
-  h.tC(G.afCols[1].x+G.afCols[1].w/2, G.ySub+5.5, 'NOMINAL', 'normal', 5.4, GRIS);
-  h.tC(G.afCols[2].x+G.afCols[2].w/2, G.ySub+5.5, 'NETA',    'normal', 5.4, GRIS);
+  // costo real y tasa anual: se derivan del análisis fiscal, así que se van con él
+  if(conFiscal){
+    etiqueta(G.afCols[0], G.yCosto, 'Costo Real', G.altoF, 5.8);
+    celdaPct(G.afCols[1], G.yCosto, costoReal, G.altoF, 6.0);
+    celdaTexto({x:G.afCols[2].x, w:G.afCols[2].w+G.afCols[3].w}, G.yCosto, 'A '+meses+' MESES', G.altoF, 6.0);
+    etiqueta(G.afCols[0], G.yTasa, 'Tasa Anual Implícita', G.altoF, 5.8);
+    celdaPct(G.afCols[1], G.yTasa, markup/anios, G.altoF, 6.0);
+    celdaPct(G.afCols[2], G.yTasa, costoReal/anios, G.altoF, 6.0);
+    h.tC(G.afCols[1].x+G.afCols[1].w/2, G.ySub+5.5, 'NOMINAL', 'normal', 5.4, GRIS);
+    h.tC(G.afCols[2].x+G.afCols[2].w/2, G.ySub+5.5, 'NETA',    'normal', 5.4, GRIS);
+  }
   // "SANTANDER EMPRESAS" se omite por indicación.
 
   // ── notas ──
@@ -3254,12 +3886,19 @@ function pdfDrawTP(doc,r){
     ['CLIENTE',               r.cliente],
     ['COMERCIAL',             r.comercial],
     ['ACTIVO',                r.activo],
-    ['VALOR FINANCIADO C/IVA',fmtM(r.valorCIV)],
+    [(r.sinIVA?'VALOR FINANCIADO S/IVA':'VALOR FINANCIADO C/IVA'),fmtM(r.valorCIV)],
     ['MONEDA',                r.moneda],
-    ['PLAZO MESES',           String(r.plazo)],
-    ['RENTA ANTICIPADA',      fmtM(r.aport||0)],
+    /* Con pagos no mensuales, meses y número de pagos difieren: se muestran
+       ambos para que la tabla no se lea como si fueran 6 meses. */
+    ['PLAZO MESES',           String(mesesDe(r))],
+    ['NÚMERO DE PAGOS',       String(r.plazo)+
+        (periodoDe(r)!==PERIODOS.MENSUAL ? ' · '+periodoDe(r).renta.toLowerCase() : '')],
+    /* Renta anticipada y aportación extraordinaria son conceptos distintos: la
+       fila mostraba la aportación bajo la etiqueta de renta anticipada. Se lee
+       su propio campo y se conserva aport como respaldo para registros viejos. */
+    ['RENTA ANTICIPADA',      fmtM(r.rentaAnticipada!==undefined ? r.rentaAnticipada : (r.aport||0))],
     ['RESIDUAL EN %',         fmtP(r.resPct)],
-    ['RESIDUAL CON IVA',      fmtM(r.resCIV)],
+    [(r.sinIVA?'RESIDUAL SIN IVA':'RESIDUAL CON IVA'), fmtM(r.resCIV)],
     ['FECHA DE COTIZACIÓN',   pdfFechaLarga(r.fechaCot)]
   ];
   hdr.forEach(function(g,i){ pdfRow2(doc,40,y+i*rh,200,316,rh,g[0],g[1],i); });
@@ -3268,33 +3907,59 @@ function pdfDrawTP(doc,r){
   var pagos = r.pagos, n = pagos.length;
   var avail = maxY - y - 13; // espacio bajo el encabezado de columnas
 
+  /* r.desglosaIVA divide la columna de renta en SUBTOTAL, IVA y TOTAL: hay
+     clientes que lo piden para su registro contable. En operaciones exentas no
+     aplica, porque no hay IVA que desglosar. */
+  var desglosa = !!r.desglosaIVA && !r.sinIVA;
+  var IVAtp = 0.16;
+  var COLS = desglosa
+    ? ['MES','FECHA','SUBTOTAL','IVA','TOTAL']
+    : ['MES','FECHA', periodoDe(r).tabla];
+
+  /* Centro de cada columna, acumulando anchos. */
+  function centros(cw){
+    var xs=[], acum=0;
+    for(var k=0;k<cw.length;k++){ xs.push(acum+cw[k]/2); acum+=cw[k]; }
+    return xs;
+  }
   function colHeader(tx,tw,cw,yy){
     h.box(tx,yy,tw,13,PDF_DN);
-    h.tC(tx+cw[0]/2, yy+9.5,'MES','bold',6.5,PDF_WHT);
-    h.tC(tx+cw[0]+cw[1]/2, yy+9.5,'FECHA','bold',6.5,PDF_WHT);
-    h.tC(tx+cw[0]+cw[1]+cw[2]/2, yy+9.5,'RENTA MENSUAL','bold',6.5,PDF_WHT);
+    var xs=centros(cw);
+    for(var k=0;k<COLS.length;k++)
+      h.tC(tx+xs[k], yy+9.5, COLS[k],'bold', desglosa?5.6:6.5, PDF_WHT);
     return yy+13;
   }
   function rowPago(tx,tw,cw,yy,trh,fsz,p,zebra){
     if(zebra) h.box(tx,yy,tw,trh,PDF_LB3);
     var ty = yy + trh/2 + fsz*0.35;
-    h.tC(tx+cw[0]/2, ty, p.mes,'normal',fsz,PDF_BLK);
-    h.tC(tx+cw[0]+cw[1]/2, ty, formatDate(p.fecha),'normal',fsz,PDF_BLK);
-    h.tC(tx+cw[0]+cw[1]+cw[2]/2, ty, fmtM(p.rentaDisplay!==undefined?p.rentaDisplay:r.rentaCIV),'bold',fsz,PDF_BLK);
+    var xs=centros(cw);
+    var tot = (p.rentaDisplay!==undefined ? p.rentaDisplay : r.rentaCIV);
+    h.tC(tx+xs[0], ty, p.mes,'normal',fsz,PDF_BLK);
+    h.tC(tx+xs[1], ty, formatDate(p.fecha),'normal',fsz,PDF_BLK);
+    if(desglosa){
+      var sub = tot/(1+IVAtp), iva = tot-sub;
+      h.tC(tx+xs[2], ty, fmtM(sub),'normal',fsz,PDF_BLK);
+      h.tC(tx+xs[3], ty, fmtM(iva),'normal',fsz,PDF_BLK);
+      h.tC(tx+xs[4], ty, fmtM(tot),'bold',fsz,PDF_BLK);
+    } else {
+      h.tC(tx+xs[2], ty, fmtM(tot),'bold',fsz,PDF_BLK);
+    }
   }
 
   if(n <= 24){
     // ── UNA COLUMNA a todo lo ancho (proporciones de la skill: 15/40/45)
-    var tw = 516, cw = [78,206,232];
+    var tw = 516, cw = desglosa ? [50,116,120,110,120] : [78,206,232];
     var trh = Math.max(10, Math.min(16, avail/n));
     var fsz = trh >= 13 ? 7.5 : 7;
     var yy = colHeader(40,tw,cw,y);
     for(var i=0;i<n;i++){ rowPago(40,tw,cw,yy,trh,fsz,pagos[i],i%2===0); yy += trh; }
   } else {
     // ── DOS COLUMNAS mitad y mitad
-    var tw2 = 250, gap = 16;
+    /* Con desglose cada bloque necesita 5 columnas: se ensanchan y se reduce
+       el espacio entre bloques para que los dos quepan en la hoja. */
+    var tw2 = desglosa ? 262 : 250, gap = desglosa ? 8 : 16;
     var TX = [40, 40+tw2+gap];
-    var cw2 = [40,80,130];
+    var cw2 = desglosa ? [26,54,64,54,64] : [40,80,130];
     var perCol = Math.ceil(n/2);
     var trh2 = Math.max(7.5, Math.min(12, avail/perCol));
     var fsz2 = trh2 >= 10 ? 6.5 : 6;
@@ -3343,8 +4008,9 @@ function pdfDrawTD(doc,r){
     ['VALOR FINANCIADO CON IVA', fmtM(r.valorCIV)],
     ['MONEDA',                   r.moneda],
     ['ESQUEMA',                  r.esquema],
-    ['PLAZO MESES',              String(r.plazo)],
-    ['PLAZO SUCESIVO',           '0'],
+    ['PLAZO MESES',              String(mesesDe(r))],
+    ['NÚMERO DE PAGOS',          String(r.plazo)+
+        (periodoDe(r)!==PERIODOS.MENSUAL ? ' ('+periodoDe(r).renta.split(' ')[1].toLowerCase()+'es)' : '')],
     ['RESIDUAL EN %',            fmtP(r.resPct)],
     ['RESIDUAL CON IVA',         fmtM(r.resCIV)],
     ['FECHA DE COTIZACIÓN',      pdfFechaLarga(r.fechaCot)],
@@ -3425,15 +4091,33 @@ function pdfDisponible(){
   return false;
 }
 
+/* Lee la casilla de la barra de resultados. Si no existe (llamadas desde el
+   historial o desde el flujo de clientes), el análisis se incluye. */
+function incluirFiscal(){
+  var c=gEl('chk-fiscal');
+  return c ? !!c.checked : true;
+}
+/* Desglose de IVA en la tabla de pagos. Por omisión NO, para no cambiar el
+   formato de siempre en las cotizaciones que ya se envían así. */
+function desglosarIVA(){
+  var c=gEl('chk-desglosa');
+  return c ? !!c.checked : false;
+}
+
 function expCot(r){
   r = r || CR; if(!r) return;
   if(!pdfDisponible()) return;
+  /* Se copia el registro para no dejar la marca pegada en CR: la casilla
+     decide sólo en esta descarga. */
+  var rr = {}; for(var k in r) if(r.hasOwnProperty(k)) rr[k]=r[k];
+  rr.sinFiscal = !incluirFiscal();
+  rr.desglosaIVA = desglosarIVA();
   var doc = new window.jspdf.jsPDF({orientation:'portrait',unit:'pt',format:'a4'});
-  pdfDrawCot(doc,r);
+  pdfDrawCot(doc,rr);
   doc.addPage();
-  pdfDrawTP(doc,r);
-  doc.save('COT_TP_'+pdfSafeName(r.cliente)+'_'+r.plazo+'M.pdf');
-  showToast('Cotización + Tabla de Pagos PDF ✓','ok');
+  pdfDrawTP(doc,rr);
+  doc.save('COT_TP_'+pdfSafeName(rr.cliente)+'_'+rr.plazo+'M'+(rr.sinFiscal?'_SIN_FISCAL':'')+'.pdf');
+  showToast('Cotización + Tabla de Pagos PDF'+(rr.sinFiscal?' (sin análisis fiscal)':'')+' ✓','ok');
 }
 
 function expTP(r){
@@ -3802,8 +4486,11 @@ function ciLimpiarTodo() {
    ni de los gastos legales — sólo del valor, la aportación, el plazo y los
    pagos. La tasa y los gastos entran después, cuando se despeja la comisión
    Santander que sostiene esa renta con el split 47.5 / 52.5. */
-function skRentaParaTIR(tirNomAnual, valorCIV, aport, plazo, resCIV){
-  var r = tirNomAnual / 12;
+/* 'periodosAnio' son los periodos de pago que hay en un año: 12 mensual,
+   4 trimestral, 2 semestral, 1 anual. Por omisión mensual. */
+function skRentaParaTIR(tirNomAnual, valorCIV, aport, plazo, resCIV, periodosAnio){
+  var pa = periodosAnio || 12;
+  var r = tirNomAnual / pa;
   if (!isFinite(r) || r <= -1) return NaN;
   var inv    = Math.pow(1 + r, -plazo);
   var anual  = (Math.abs(r) < 1e-12) ? plazo : (1 - inv) / r;   // anualidad
@@ -3813,10 +4500,11 @@ function skRentaParaTIR(tirNomAnual, valorCIV, aport, plazo, resCIV){
 
 /* TIR nominal anual efectivamente alcanzada con una renta ya truncada a
    2 decimales. Sirve para mostrar la desviación contra el objetivo. */
-function skTIRDeRenta(rentaCIV, valorCIV, aport, plazo, resCIV){
+function skTIRDeRenta(rentaCIV, valorCIV, aport, plazo, resCIV, periodosAnio){
+  var pa = periodosAnio || 12;
   var cf = [-(valorCIV - aport)];
   for (var i = 1; i <= plazo; i++) cf.push(rentaCIV + (i === plazo ? resCIV : 0));
-  return calcIRR(cf) * 12;
+  return calcIRR(cf) * pa;
 }
 
 /* Modo activo de la tarjeta: 'renta' u 'tir'. */
@@ -3888,6 +4576,16 @@ function calcInversa() {
     gEl('ci-gastos').value = gastos;
   }
 
+  /* La inversa trabaja con la periodicidad que esté seleccionada. Estas tres
+     variables se calculan AQUÍ, antes del bloque de modo TIR, porque ahí se
+     llama a skRentaParaTIR() con periodosAnioCI: declaradas más abajo, el
+     hoisting de var las dejaba en undefined y la función caía a su valor por
+     omisión de 12 periodos al año. Resultado: en trimestral, semestral y anual
+     la renta objetivo se despejaba como si los pagos fueran mensuales. */
+  var perCI = gEl('inp-periodicidad') ? gEl('inp-periodicidad').value : 'MENSUAL';
+  var pasoCI = (PERIODOS[perCI] || PERIODOS.MENSUAL).meses;
+  var periodosAnioCI = 12 / pasoCI;
+
   if (modo === 'tir') {
     // ── Ajustar la renta a una TIR objetivo ──
     if (!tasa || !valorCIV || !plazo) {
@@ -3899,7 +4597,7 @@ function calcInversa() {
     if (tirObj > 3) {
       showToast('La TIR objetivo (' + fmtP(tirObj) + ') parece fuera de rango', 'err'); return;
     }
-    var rentaObj = skRentaParaTIR(tirObj, valorCIV, aport, plazo, trunc2(resCIV));
+    var rentaObj = skRentaParaTIR(tirObj, valorCIV, aport, plazo, trunc2(resCIV), periodosAnioCI);
     if (!isFinite(rentaObj) || rentaObj <= 0) {
       showToast('Con ese residual la TIR objetivo exigiría una renta nula o negativa. Baja el residual o sube la TIR.', 'err');
       return;
@@ -3931,7 +4629,9 @@ function calcInversa() {
   else if (fCotStr) { fechaDescCI = new Date(fCotStr + 'T12:00:00'); fechaDescCI.setDate(fechaDescCI.getDate() + 25); }
   else               fechaDescCI = new Date();
 
-  var pagosCI = skCalendarioPagos(fechaDescCI, plazo);
+  /* La inversa trabaja con la periodicidad que esté seleccionada: si no, el
+     calendario y la TIR se calcularían como si los pagos fueran mensuales. */
+  var pagosCI = skCalendarioPagos(fechaDescCI, plazo, pasoCI);
   var descTotal = 0;
   for (var j = 0; j < plazo; j++) {
     var pago = rentaCIV + (j === plazo - 1 ? resCIV : 0);
@@ -3960,7 +4660,7 @@ function calcInversa() {
     for (var q = 0; q < plazo; q++) A += 1 - tasa * pagosCI[q].dias / 360;
     var B = resCIV * (1 - tasa * pagosCI[plazo - 1].dias / 360);
     var rentaPiso = (valorCIV + gastos - aport - B) / A;
-    var tirPiso   = skTIRDeRenta(trunc2(rentaPiso), valorCIV, aport, plazo, resCIV);
+    var tirPiso   = skTIRDeRenta(trunc2(rentaPiso), valorCIV, aport, plazo, resCIV, periodosAnioCI);
     if (modo === 'tir' && isFinite(tirPiso)) {
       showToast('TIR objetivo demasiado baja: no deja comisión para Santander. El piso con estos parámetros es ' +
                 fmtP(tirPiso) + ' (renta ' + fmtM(trunc2(rentaPiso)) + ').', 'err');
@@ -3978,7 +4678,7 @@ function calcInversa() {
 
   // Renta resuelta y TIR efectivamente alcanzada (la renta va truncada a
   // 2 decimales, así que la TIR real cae a unas milésimas del objetivo)
-  var tirReal = skTIRDeRenta(rentaCIV, valorCIV, aport, plazo, resCIV);
+  var tirReal = skTIRDeRenta(rentaCIV, valorCIV, aport, plazo, resCIV, periodosAnioCI);
   setText('ci-res-renta', fmtM(rentaCIV));
   setText('ci-res-tir',   fmtP(tirReal));
   var tRenta = gEl('ci-tile-renta'), tTir = gEl('ci-tile-tir');
@@ -4558,6 +5258,12 @@ function cwAbrir(rec){
     dep_nombre:'', dep_rfc:'', dep_dom:'', dep_correo:'', dep_nac:'mexicana', dep_nac_fecha:'', dep_act:'empleada',
     sku1:'0', sku2:'1',            // Amanda Katia y Eduardo Erasto por omisión
     plazo: rec ? rec.plazo : '',
+    /* La fecha del primer pago que calculó la cotización, ya ajustada a día
+       hábil: así los contratos declaran la misma que la tabla de pagos. */
+    fecha_primera_renta: (rec && rec.fechaPrimera) ? rec.fechaPrimera : '',
+    /* Sin esto el selector arrancaba en mensual y una cotización semestral
+       generaba contratos con fechas mensuales. */
+    periodicidad: (rec && rec.periodicidad) ? rec.periodicidad : 'MENSUAL',
     renta_mensual: (rec && rec.rentaCIV) ? rec.rentaCIV.toFixed(2) : '',
     renta_ultimo: (rec && rec.resCIV && rec.resCIV>0) ? (rec.rentaCIV+rec.resCIV).toFixed(2) : '',
     renta_total: (rec && rec.factCIV) ? rec.factCIV.toFixed(2) : '',
@@ -4622,7 +5328,8 @@ function cwGuardarEnHistorial(){
      descuento un día del mes ANTERIOR a la primera renta. */
   var f1 = ficha.fecha_primera_renta ? new Date(ficha.fecha_primera_renta+'T12:00:00') : new Date();
   var fDesc = new Date(f1.getFullYear(), f1.getMonth()-1, 15);
-  var cal = plazo ? skCalendarioPagos(fDesc, plazo) : [];
+  var pasoCW = ({MENSUAL:1,TRIMESTRAL:3,SEMESTRAL:6,ANUAL:12}[ficha.periodicidad||'MENSUAL']||1);
+  var cal = plazo ? skCalendarioPagos(fDesc, plazo, pasoCW) : [];
   /* Con renta escalonada cada mes lleva su propio importe; el último suma el
      residual. Sin escalonar, todos van a la renta mensual salvo el último. */
   var porMes = ficha.importes_por_mes || null;
@@ -4659,6 +5366,10 @@ function cwGuardarEnHistorial(){
     tirNom: NaN, tirEf: NaN, utilContable: 0, factor: NaN,
     pagos: pagos,
     origen: 'contrato',
+    periodicidad: ficha.periodicidad || 'MENSUAL',
+    fechaPrimera: ficha.fecha_primera_renta || '',
+    fechaPrimeraCapturada: ficha.fecha_primera_renta || '',
+    mesesTotales: plazo * ({MENSUAL:1,TRIMESTRAL:3,SEMESTRAL:6,ANUAL:12}[ficha.periodicidad||'MENSUAL']||1),
     numContrato: ficha.num_contrato || '',
     /* Datos de la factura del proveedor: el descuento los pide otra vez
        (Endoso de Factura, Carta Cargo y Abono), así que viajan con la
@@ -4887,9 +5598,12 @@ function cwFormHTML(p){
     +'</div></div>';
 
   h+='<div class="cw-sec"><div class="cw-st">5 · Bienes / Facturas'
-    +'<label class="btn bp bsm" style="margin-left:auto;cursor:pointer;">📄 Subir XML (CFDI)'
+    +'<label class="btn bp bsm" style="margin-left:auto;cursor:pointer;">📗 Relación de activos'
+      +'<input type="file" accept=".xlsx,.xls" style="display:none;" onchange="cwCargarRelacion(this);"></label>'
+    +'<label class="btn bp bsm" style="margin-left:6px;cursor:pointer;">📄 Subir XML (CFDI)'
     +'<input type="file" accept=".xml,text/xml" multiple style="display:none;" onchange="cwParseXMLs(this.files); this.value=null;"></label>'
     +'<button class="btn bo bsm" type="button" onclick="cwAddBien({})" style="margin-left:6px;">+ Bien manual</button></div>'
+    +'<div id="cw-rel-nota" class="cw-note" style="display:none;margin-bottom:10px;"></div>'
     +'<div id="cw-bienes-list"></div>'
     +'<div class="fg" style="margin-top:10px;">'
     + cwField('cw-ubicacion','Ubicación de los activos (default: domicilio arrendataria)',p.ubicacion_activos)
@@ -4904,7 +5618,13 @@ function cwFormHTML(p){
     +'</div></div>';
 
   h+='<div class="cw-sec"><div class="cw-st">6 · Importes y plazo</div><div class="fg c4">'
-    + cwField('cw-plazo','Plazo (meses) *',p.plazo,'number','',' oninput="cwCalcTotal()"')
+    + cwField('cw-plazo','Número de pagos *',p.plazo,'number','',' oninput="cwCalcTotal()"')
+    +'<div class="fi"><label>Periodicidad de pago</label>'
+      +'<select id="cw-periodicidad" onchange="cwCalcTotal()">'
+      +['MENSUAL','TRIMESTRAL','SEMESTRAL','ANUAL'].map(function(x){
+         return '<option value="'+x+'"'+(((p.periodicidad||'MENSUAL')===x)?' selected':'')+'>'
+           +x.charAt(0)+x.slice(1).toLowerCase()+'</option>'; }).join('')
+      +'</select></div>'
     + cwField('cw-rentam','Renta mensual c/IVA * <span id="cw-rentam-nota" style="display:none;text-transform:none;font-weight:400;">(se toma del periodo con más pagos)</span>',p.renta_mensual,'number','', ' step="0.01" oninput="cwCalcTotal()"')
     + cwField('cw-rentau','Renta último pago (residual)',p.renta_ultimo,'number','igual a la mensual si se deja vacío',' step="0.01" oninput="cwCalcTotal()"')
     + cwField('cw-rentat','Renta total c/IVA',p.renta_total,'number','se calcula solo',' step="0.01" oninput="CW.totalEditado=true; cwCalcTotal();"')
@@ -5107,6 +5827,11 @@ function cwBuildFicha(){
     },
     plazo_meses:parseInt(v('cw-plazo')),
     renta_mensual:parseFloat(v('cw-rentam')),
+    /* Viene de la cotización de origen; en captura manual se elige en el
+       selector de arriba. Los documentos la usan para las fechas de pago y
+       para la temporalidad que declara el Anexo. */
+    periodicidad: (gEl('cw-periodicidad') ? gEl('cw-periodicidad').value
+                   : ((CW.rec && CW.rec.periodicidad) || 'MENSUAL')),
     /* Esquema escalonado: importe de cada mes. Los documentos y la tabla de
        pagos lo usan en lugar de una renta única. */
     importes_por_mes: cwImportesPorMes(),
@@ -5174,6 +5899,7 @@ function cwBuildFicha(){
   draft.fb1=ficha.firmantes_santander[0]; draft.fb2=ficha.firmantes_santander[1];
   draft.sku1=ficha.sku1; draft.sku2=ficha.sku2;
   draft._tramos=CW.tramos||[]; draft._escalonada=!!(gEl('cw-escalonada')&&gEl('cw-escalonada').checked);
+  draft.periodicidad=ficha.periodicidad||'MENSUAL';
   draft.arr_nombre=ficha.arrendataria.nombre; draft.arr_rfc=ficha.arrendataria.rfc;
   draft.arr_rep=ficha.arrendataria.representante; draft.arr_rep2=ficha.arrendataria.representante_2||'';
   draft.arr_dom=ficha.arrendataria.domicilio; draft.arr_correo=ficha.arrendataria.correo; draft.arr_cuenta=ficha.arrendataria.cuenta_cheques;
@@ -5636,6 +6362,247 @@ function cwLoadXlsx(){
     document.head.appendChild(s);
   });
   return CW_XLSX;
+}
+
+/* ═══ RELACIÓN DE ACTIVOS ═══
+   Lee dos formatos de Excel para llenar los bienes del contrato:
+
+   a) Alianzas / pago a proveedor: UNA tabla con No. FACTURA, PROVEEDOR,
+      DESCRIPCIÓN, NÚMERO DE SERIE, MONEDA, SUBTOTAL, IVA, TOTAL, FOLIO FISCAL.
+
+   b) Sale and leaseback: DOS tablas lado a lado. La izquierda es la factura de
+      origen (con la que el cliente compró el activo) y la derecha es la factura
+      a Santander, que es la que va al contrato. Se toma la DERECHA.
+      Hay dos variantes de esa tabla derecha y no traen los mismos campos: la
+      de "FACTURA A SANTANDER" no incluye descripción ni año, así que esos se
+      completan con la fila correspondiente de la tabla izquierda. */
+
+/* Normaliza un encabezado: sin acentos, minúsculas, espacios colapsados. */
+function relNorm(s){
+  return String(s==null?'':s).toLowerCase()
+    .replace(/[áàä]/g,'a').replace(/[éèë]/g,'e').replace(/[íìï]/g,'i')
+    .replace(/[óòö]/g,'o').replace(/[úùü]/g,'u').replace(/ñ/g,'n')
+    .replace(/\s+/g,' ').trim();
+}
+
+/* Localiza la fila de encabezados: la de más celdas de texto en las primeras
+   filas. Devuelve su índice y el arreglo de encabezados normalizados. */
+function relEncabezado(rows){
+  var mejor=-1, mejorN=0;
+  for(var i=0; i<Math.min(rows.length,8); i++){
+    var n=0, fila=rows[i]||[];
+    for(var j=0;j<fila.length;j++){
+      var v=fila[j];
+      if(typeof v==='string' && v.trim().length>1) n++;
+    }
+    if(n>mejorN){ mejorN=n; mejor=i; }
+  }
+  if(mejor<0 || mejorN<4) return null;
+  return {fila:mejor, cols:(rows[mejor]||[]).map(relNorm)};
+}
+
+/* Parte los encabezados en tablas. Dos señales, porque los archivos usan una
+   u otra:
+     1) una columna vacía entre bloques (hoja S&LB);
+     2) un TÍTULO en las filas de arriba marcando dónde empieza el bloque
+        derecho (el rótulo rojo "FACTURA A SANTANDER" o "FACTURA"), necesario
+        cuando las dos tablas quedan pegadas sin columna vacía —caso de la hoja
+        S&LB (2), donde "Valor de S&LB C/IVA" y "FACTURA A SANTANDER" son
+        columnas contiguas y sin esto se leerían como una sola tabla. */
+function relTablas(cols, rows, filaEnc){
+  var cortes = {};
+  for(var r=0; r<filaEnc; r++){
+    var fila = rows[r]||[];
+    for(var j=1;j<fila.length;j++){
+      var v=fila[j];
+      if(typeof v==='string' && v.trim().length>2 && cols[j]) cortes[j]=1;
+    }
+  }
+  var tablas=[], actual=null;
+  for(var k=0;k<cols.length;k++){
+    if(cols[k]){
+      if(actual && cortes[k]){ tablas.push(actual); actual=null; }   // corte por título
+      if(!actual) actual={ini:k,fin:k};
+      actual.fin=k;
+    } else if(actual){
+      tablas.push(actual); actual=null;                              // corte por hueco
+    }
+  }
+  if(actual) tablas.push(actual);
+  return tablas;
+}
+
+/* Empareja cada campo del bien con la columna que le corresponde. El orden de
+   los patrones importa: "valor factura s/iva" debe caer en subtotal, no en
+   factura, y "factura origen" no debe ganarle a "factura a santander". */
+function relMapear(cols, ini, fin){
+  var m={};
+  function buscar(patrones, excluir){
+    for(var p=0;p<patrones.length;p++){
+      for(var j=ini;j<=fin;j++){
+        var h=cols[j]; if(!h) continue;
+        if(excluir && excluir.test(h)) continue;
+        if(patrones[p].test(h)) return j;
+      }
+    }
+    return -1;
+  }
+  m.factura     = buscar([/^factura a santander/, /^no\.? factura/, /^factura$/, /factura/], /origen|valor|fecha|folio/);
+  m.fechaFact   = buscar([/fecha de factura/, /fecha/], /adquisicion/);
+  m.proveedor   = buscar([/^proveedor/]);
+  m.descripcion = buscar([/^descripcion/, /^concepto/]);
+  m.serie       = buscar([/numero de serie/, /num de serie/, /no de serie/, /serie/], /validacion/);
+  m.anio        = buscar([/^ano$/, /^anio$/]);
+  m.moneda      = buscar([/moneda/]);
+  m.subtotal    = buscar([/^subtotal/, /valor factura s\/iva/, /s\/iva/]);
+  m.iva         = buscar([/^iva$/]);
+  m.total       = buscar([/^total$/, /valor factura c\/iva/, /c\/iva/]);
+  m.folio       = buscar([/folio fiscal/]);
+  m.pedimento   = buscar([/pedimento/]);
+  return m;
+}
+
+/* Convierte la relación en bienes. Devuelve {bienes, tabla, aviso}. */
+function relLeerActivos(rows){
+  var enc = relEncabezado(rows);
+  if(!enc) return {bienes:[], aviso:'No se encontró una fila de encabezados reconocible.'};
+  var tablas = relTablas(enc.cols, rows, enc.fila);
+  if(!tablas.length) return {bienes:[], aviso:'No se encontraron columnas con datos.'};
+
+  /* Con dos o más tablas hay que quedarse con la de la factura a Santander.
+     "La última" no sirve como criterio: la hoja S&LB tiene además un grupo
+     suelto al final (VO.BO COMPRAS, VALIDACIÓN SERIE) que también parece
+     tabla. Se puntúa cada una por cuántos campos de factura reconoce y se
+     toma la mejor; en empate, la de más a la derecha. */
+  function puntuar(t){
+    var m=relMapear(enc.cols,t.ini,t.fin), p=0;
+    ['factura','proveedor','serie','folio','total','subtotal','descripcion'].forEach(function(k){
+      if(m[k]>=0) p++;
+    });
+    return p;
+  }
+  var der=tablas[0], mejorP=-1;
+  for(var ti=0; ti<tablas.length; ti++){
+    var p=puntuar(tablas[ti]);
+    if(p>=mejorP){ mejorP=p; der=tablas[ti]; }   // >= para preferir la derecha en empate
+  }
+  var izq = (tablas.length>1 && tablas[0]!==der) ? tablas[0] : null;
+  var mDer = relMapear(enc.cols, der.ini, der.fin);
+  var mIzq = izq ? relMapear(enc.cols, izq.ini, izq.fin) : null;
+
+  function val(fila, m, campo){
+    if(!m || m[campo]===undefined || m[campo]<0) return '';
+    var v=fila[m[campo]];
+    return (v===null||v===undefined) ? '' : v;
+  }
+  /* Sólo estos campos se completan con la tabla izquierda cuando la derecha no
+     los trae: son descriptivos del activo y no cambian entre una factura y la
+     otra. La identidad de la factura a Santander —número, proveedor, folio y
+     valores— se toma ESTRICTAMENTE de la tabla derecha: rellenarla con la
+     factura de origen pondría en el contrato datos del proveedor original en
+     lugar de los de la operación. */
+  var HEREDABLES = {descripcion:1, anio:1, moneda:1, pedimento:1};
+  function campo(fila, c){
+    var v=val(fila,mDer,c);
+    if((v==='' || v===null) && mIzq && HEREDABLES[c]) v=val(fila,mIzq,c);
+    return v;
+  }
+  function texto(v){
+    if(v instanceof Date) return isoLocal(v);
+    return String(v===null||v===undefined?'':v).replace(/\s+/g,' ').trim();
+  }
+  function num(v){
+    if(typeof v==='number') return v;
+    var n=parseFloat(String(v||'').replace(/[^0-9.\-]/g,''));
+    return isFinite(n)?n:0;
+  }
+
+  var bienes=[], omitidas=0;
+  for(var i=enc.fila+1; i<rows.length; i++){
+    var fila=rows[i]||[];
+    var desc=texto(campo(fila,'descripcion'));
+    var serie=texto(campo(fila,'serie'));
+    var fact=texto(campo(fila,'factura'));
+    /* Sin serie ni factura EN LA TABLA DERECHA no hay activo que llevar al
+       contrato: puede ser un renglón de totales, un separador, o un activo que
+       todavía no se le ha facturado a Santander. Se cuenta y se avisa. */
+    if(!serie && !fact){ omitidas++; continue; }
+    var tot=num(campo(fila,'total')), sub=num(campo(fila,'subtotal'));
+    bienes.push({
+      descripcion: desc,
+      numero_serie: serie,
+      numero_factura: fact,
+      emisor_factura: texto(campo(fila,'proveedor')),
+      folio_fiscal: texto(campo(fila,'folio')),
+      numero_pedimento: texto(campo(fila,'pedimento')),
+      fecha_pedimento: '',
+      uso_destino: 'Comercial',
+      /* Se conservan para calcular el valor total de la operación. */
+      _valor: tot || sub,
+      _moneda: texto(campo(fila,'moneda')) || 'MXN',
+      _anio: texto(campo(fila,'anio'))
+    });
+  }
+  return {
+    bienes: bienes,
+    tabla: (tablas.length>1 ? 'derecha (factura a Santander)' : 'única'),
+    nTablas: tablas.length,
+    omitidas: omitidas,
+    aviso: bienes.length ? '' : 'No se encontraron activos con número de serie o factura.'
+  };
+}
+
+/* Carga el archivo y llena los bienes del wizard. */
+function cwCargarRelacion(input){
+  var f = input && input.files && input.files[0];
+  if(!f) return;
+  if(!/\.xlsx?$/i.test(f.name)){ showToast('Debe ser un Excel (.xlsx)','err'); input.value=''; return; }
+  showToast('Leyendo la relación de activos…','ok');
+  cwLoadXlsx().then(function(XLSX){
+    return f.arrayBuffer().then(function(buf){
+      var wb = XLSX.read(new Uint8Array(buf), {type:'array', cellDates:true});
+      /* Se evalúa cada hoja y se elige la que aporte más activos; con varias
+         candidatas se avisa cuál se usó, para que se pueda revisar. */
+      var mejor=null;
+      for(var h=0; h<wb.SheetNames.length; h++){
+        var nombre=wb.SheetNames[h];
+        var rows = XLSX.utils.sheet_to_json(wb.Sheets[nombre], {header:1, raw:true, defval:null});
+        var res = relLeerActivos(rows);
+        res.hoja = nombre;
+        if(!mejor || res.bienes.length > mejor.bienes.length) mejor = res;
+      }
+      if(!mejor || !mejor.bienes.length){
+        showToast((mejor&&mejor.aviso) || 'No se pudieron leer activos del archivo','err');
+        return;
+      }
+      CW.bienes = mejor.bienes.map(function(b){ return b; });
+      cwRenderBienes();
+      cwRelacionNota(mejor, wb.SheetNames.length);
+      input.value='';
+      showToast(mejor.bienes.length+' activo(s) cargados','ok');
+    });
+  }).catch(function(e){
+    showToast('No se pudo leer el Excel: '+e.message,'err');
+  });
+}
+
+/* Deja constancia de qué se leyó: hoja, tabla y valor total, para poder
+   cotejarlo contra el archivo antes de generar los contratos. */
+function cwRelacionNota(res, nHojas){
+  var el=gEl('cw-rel-nota'); if(!el) return;
+  var total=0, monedas={};
+  for(var i=0;i<res.bienes.length;i++){
+    total += Number(res.bienes[i]._valor)||0;
+    monedas[res.bienes[i]._moneda||'MXN']=1;
+  }
+  var mon=Object.keys(monedas);
+  var t = res.bienes.length+' activo(s) de la hoja «'+res.hoja+'»';
+  if(res.nTablas>1) t += ', tomando la tabla '+res.tabla;
+  t += '. Valor sumado: '+fmtM(total)+(mon.length===1?(' '+mon[0]):' (varias monedas)');
+  if(res.omitidas) t += '. Se omitieron '+res.omitidas+' renglón(es) sin serie ni factura.';
+  if(nHojas>1) t += ' El libro tiene '+nHojas+' hojas; revisa que sea la correcta.';
+  el.textContent=t;
+  el.style.display='';
 }
 
 function cwParseExcelRows(rows){
@@ -6309,7 +7276,19 @@ function dwPagosVigentes(){
   var base = (DW_BASE && DW_BASE.pagos && DW_BASE.pagos.length) ? DW_BASE.pagos : [];
   var plazo = base.length || parseInt((gEl('dw-plazo')||{}).value,10) || 0;
   if(!plazo) return [];
-  var cal = skCalendarioPagos(fDesc, plazo);
+  /* El descuento hereda la periodicidad de la cotización de origen: con pagos
+     semestrales, generar el calendario mensual daría fechas y días erróneos y
+     con ellos un Valor Descuento equivocado. */
+  var pasoDW = (PERIODOS[(DW_BASE && DW_BASE.periodicidad) || 'MENSUAL'] || PERIODOS.MENSUAL).meses;
+  /* Si la cotización fijó la 1ª renta, el descuento arranca en la misma fecha:
+     de lo contrario las tablas de una misma operación no coincidirían. Sólo se
+     respeta mientras sea posterior a la fecha de descuento capturada aquí. */
+  var priDW = null;
+  if(DW_BASE && DW_BASE.fechaPrimeraCapturada){
+    var cand = new Date(DW_BASE.fechaPrimeraCapturada + 'T12:00:00');
+    if(cand > fDesc) priDW = cand;
+  }
+  var cal = skCalendarioPagos(fDesc, plazo, pasoDW, priDW);
   var vFact = dwP('dw-fact');
   /* Las rentas se toman TAL CUAL vienen del contrato o de la cotización.
      Antes se reescalaban para que su suma cuadrara con el Valor Factoraje
@@ -6441,7 +7420,8 @@ function dwTDExcel(){
 
   var cf=[-(vEq - aport)];
   for(var k=0;k<pagos.length;k++) cf.push(pagos[k].rentaDisplay);
-  var tir = calcIRR(cf)*12;
+  var pasoTD = (PERIODOS[(DW_BASE && DW_BASE.periodicidad) || 'MENSUAL'] || PERIODOS.MENSUAL).meses;
+  var tir = calcIRR(cf)*(12/pasoTD);
 
   var r = {
     cliente: (DW_MANUAL && gEl('dw-cliente')) ? gEl('dw-cliente').value.trim().toUpperCase() : (base.cliente||''),
