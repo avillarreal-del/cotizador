@@ -4,7 +4,7 @@
 
    ► AL PUBLICAR UNA VERSIÓN NUEVA hay que subir el número de CACHE. Si no, el
      teléfono sigue sirviendo la copia guardada y los cambios no se ven. */
-const CACHE = 'sk-cotizador-v6';   // v6: ajuste de nombres largos y comisión de apertura
+const CACHE = 'sk-cotizador-v7';   // v7: diseño adaptado a tabletas (iPad)
 
 const PROPIOS = [
   './',

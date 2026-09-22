@@ -217,6 +217,65 @@ tbody td{color:var(--tx);font-family:var(--mono);font-size:12px;padding:7px 13px
   .rr{grid-template-columns:40px 1fr;grid-auto-rows:auto;}
 }
 
+/* ═══ TABLETA (641px – 1200px) ═══
+   Los iPad caían en un hueco: en vertical (744–834px) tomaban el bloque de
+   860px, que colapsa el historial a dos columnas, pero NO el de 640px, que es
+   donde viven las etiquetas VALOR/RENTA/TIR; los números quedaban sin rótulo.
+   En horizontal (1024–1180px) no tomaban ningún bloque y recibían el diseño de
+   escritorio, con campos y botones dimensionados para ratón.
+   Este bloque cubre el rango completo: rótulos del historial, blancos táctiles
+   cómodos y aprovechamiento del ancho disponible. */
+@media(min-width:641px) and (max-width:1200px){
+
+  /* ── ancho útil: en tableta sobra margen lateral ── */
+  .main{ max-width:100%; padding:22px 18px 48px; }
+
+  /* ── blancos táctiles: el dedo necesita más que el cursor ── */
+  .btn{ min-height:38px; font-size:13px; padding:8px 14px; }
+  .btn.bsm{ min-height:32px; font-size:12px; padding:6px 10px; }
+  .fi input, .fi select, .fi textarea{ min-height:38px; font-size:15px; }
+  .fi input[type=checkbox]{ width:18px; height:18px; }
+  .nav-btn{ min-height:38px; }
+  .ract, .ib{ min-width:34px; min-height:34px; }
+
+  /* ── historial: mismas fichas que en teléfono, con sus rótulos ──
+     Sin esto el bloque de 860px deja los importes sin identificar. */
+  .rh{ display:none; }
+  .rr{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 14px;
+       grid-template-columns:none; padding:10px 12px; }
+  .rr > div:nth-child(1){ flex:0 0 auto; }
+  .rr > div:nth-child(2){ flex:1 1 240px; min-width:0; font-weight:600; }
+  .rr > div:nth-child(3),
+  .rr > div:nth-child(4){ flex:0 0 auto; }
+  .rr > div:nth-child(5),
+  .rr > div:nth-child(6),
+  .rr > div:nth-child(7){ flex:0 0 auto; text-align:left; }
+  .rr > div:nth-child(5)::before{ content:'VALOR'; }
+  .rr > div:nth-child(6)::before{ content:'RENTA'; }
+  .rr > div:nth-child(7)::before{ content:'TIR'; }
+  .rr > div:nth-child(5)::before,
+  .rr > div:nth-child(6)::before,
+  .rr > div:nth-child(7)::before{
+    display:block; font-size:9px; letter-spacing:.04em;
+    color:var(--txs); font-weight:600; line-height:1.3;
+  }
+  .rr > div:nth-child(8){ flex:1 0 100%; display:flex; gap:6px; }
+
+  /* ── modales: aprovechan la pantalla sin llenarla por completo ── */
+  .mw{ max-width:94vw; }
+  .modal.wide{ max-width:94vw; }
+
+  /* ── el formulario a dos columnas se lee mejor que a cuatro ── */
+  .fg.c4{ grid-template-columns:1fr 1fr; }
+  .fg.c3{ grid-template-columns:1fr 1fr; }
+}
+
+/* En horizontal hay ancho de sobra: el formulario vuelve a tres columnas. */
+@media(min-width:1000px) and (max-width:1200px){
+  .fg.c3{ grid-template-columns:repeat(3,1fr); }
+  .fg.c4{ grid-template-columns:repeat(4,1fr); }
+}
+
 /* ═══ COTIZADOR PARA CLIENTES ═══ */
 /* z-index 5200: por ENCIMA de la portada (5000). Con 4800 la vista se abría
    detrás y parecía que el botón no hacía nada. Por debajo de los modales
