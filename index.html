@@ -230,6 +230,24 @@ tbody td{color:var(--tx);font-family:var(--mono);font-size:12px;padding:7px 13px
   /* ── ancho útil: en tableta sobra margen lateral ── */
   .main{ max-width:100%; padding:22px 18px 48px; }
 
+  /* ── ENCABEZADO ──
+     Era el verdadero problema en iPad. `header` tiene height:58px fijo; a
+     820px la marca (217px) más los seis botones (518px) más el nombre del
+     usuario no caben, los botones se parten en dos renglones y el segundo se
+     sale del encabezado y tapa el contenido.
+     Se deja que el encabezado crezca y que la navegación envuelva de forma
+     ordenada, y se compactan los botones para que en vertical quepan en un
+     solo renglón. */
+  header{ height:auto; min-height:58px; padding:8px 16px;
+          flex-wrap:wrap; row-gap:6px; align-items:center; }
+  .hdr-marca{ flex:0 1 auto; min-width:0; }
+  .hdr-marca .alias{ white-space:nowrap; }
+  .hdr-nav{ display:flex; flex-wrap:wrap; gap:6px; align-items:center;
+            margin-left:auto; }
+  .nav-btn{ margin-left:0; font-size:12px; padding:7px 10px; min-height:36px;
+            white-space:nowrap; }
+  #hdr-user{ margin-left:0; font-size:11px; white-space:nowrap; }
+
   /* ── blancos táctiles: el dedo necesita más que el cursor ── */
   .btn{ min-height:38px; font-size:13px; padding:8px 14px; }
   .btn.bsm{ min-height:32px; font-size:12px; padding:6px 10px; }
